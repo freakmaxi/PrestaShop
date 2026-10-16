@@ -1,0 +1,118 @@
+/* Orders > Tag engraving (with tag-designer.css) */
+
+.tag-engraving-tool .tag-designer__field > label,
+.tag-engraving-tool .tag-designer__legend {
+  font-weight: 700;
+}
+
+.tag-engraving-tool .tag-designer__legend {
+  padding-block-end: 0.25rem;
+  margin-block-end: 0.75rem;
+  border-block-end: 1px solid #e5e5e5;
+}
+
+.tag-engraving-tool .tag-designer__field .form-text {
+  color: #8a8c99;
+}
+
+.tag-engraving__aside {
+  position: sticky;
+  top: 7.5rem;
+}
+
+.tag-engraving-tool .tag-designer__preview.is-aside {
+  position: static;
+  margin-block-end: 1rem;
+}
+
+.tag-engraving__colours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 0.375rem;
+}
+
+.tag-engraving__colour {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem 0.25rem 0.375rem;
+  margin: 0;
+  font-weight: 400;
+  background: #fff;
+  border: 1px solid #d9d8e0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.tag-engraving__colour input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tag-engraving__colour:has(input:checked) {
+  border-color: #330066;
+  box-shadow: inset 0 0 0 1px #330066;
+  background: #f3effa;
+}
+
+.tag-engraving__colour:has(input:focus-visible) {
+  outline: 2px solid #330066;
+  outline-offset: 2px;
+}
+
+.tag-engraving__swatch {
+  display: inline-block;
+  flex: none;
+  width: 1rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 0.15);
+  border-radius: 50%;
+}
+
+.tag-engraving__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 0.5rem;
+}
+
+.tag-engraving__search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.tag-engraving__search .form-control {
+  width: 16rem;
+  max-width: 100%;
+}
+
+.tag-engraving-history td {
+  vertical-align: middle !important;
+}
+
+.tag-engraving__thumbs {
+  display: flex;
+  gap: 6px;
+}
+
+.tag-engraving__thumb {
+  width: 64px;
+  height: 64px;
+}
+
+.tag-engraving__thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tag-engraving__delete {
+  display: inline;
+}

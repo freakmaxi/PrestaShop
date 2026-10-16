@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>tagdesigner</name>
+    <displayName><![CDATA[Tag designer]]></displayName>
+    <version><![CDATA[1.1.0]]></version>
+    <description><![CDATA[Live preview of engraved tags on the product page, engraving files on the order page.]]></description>
+    <author><![CDATA[Jakpark]]></author>
+    <tab><![CDATA[front_office_features]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+</module>

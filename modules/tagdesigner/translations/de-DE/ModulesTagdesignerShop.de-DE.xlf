@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="tagdesigner.php" source-language="en" target-language="de" datatype="plaintext">
+    <body>
+      <trans-unit id="49ee3087348e8d44e1feda1917443987" approved="yes">
+        <source>Name</source>
+        <target state="final">Name</target>
+      </trans-unit>
+      <trans-unit id="080bd3ce22ddb62968378caded9c0116" approved="yes">
+        <source>Street and number</source>
+        <target state="final">Straße und Hausnummer</target>
+      </trans-unit>
+      <trans-unit id="83153fc7d87a1b49ebb260ca53730ab7" approved="yes">
+        <source>Postcode and town</source>
+        <target state="final">PLZ und Ort</target>
+      </trans-unit>
+      <trans-unit id="1f8261d17452a959e013666c5df45e07" approved="yes">
+        <source>Phone number</source>
+        <target state="final">Telefonnummer</target>
+      </trans-unit>
+      <trans-unit id="bbbfbebc4bf428272fd219a229168948" approved="yes">
+        <source>Please enter your pet's name.</source>
+        <target state="final">Bitte geben Sie den Namen Ihres Tieres ein.</target>
+      </trans-unit>
+      <trans-unit id="a63866e7cf495254718f4da6d84ad49c" approved="yes">
+        <source>This font has no %chars%: please choose another font.</source>
+        <target state="final">Diese Schrift hat kein %chars%: Bitte wählen Sie eine andere Schrift.</target>
+      </trans-unit>
+      <trans-unit id="fd7361180e06b70f634381896ffb9a32" approved="yes">
+        <source>These characters cannot be engraved on the back: %chars%</source>
+        <target state="final">Diese Zeichen können auf der Rückseite nicht graviert werden: %chars%</target>
+      </trans-unit>
+      <trans-unit id="7db5dfa2a913cdc381694980b7db6f8a" approved="yes">
+        <source>Saving your design…</source>
+        <target state="final">Ihr Design wird gespeichert…</target>
+      </trans-unit>
+      <trans-unit id="8ecfb29693845782a89062118b9c302e" approved="yes">
+        <source>Your design could not be saved, please try again.</source>
+        <target state="final">Ihr Design konnte nicht gespeichert werden, bitte versuchen Sie es erneut.</target>
+      </trans-unit>
+      <trans-unit id="5f02f05c744a0f875aebb8625ae1486f" approved="yes">
+        <source>Loading…</source>
+        <target state="final">Wird geladen…</target>
+      </trans-unit>
+      <trans-unit id="f208a3e74f0efaecfa33d9a8cb5e4f63" approved="yes">
+        <source>Please design your tag before adding it to the cart.</source>
+        <target state="final">Bitte gestalten Sie Ihre Marke, bevor Sie sie in den Warenkorb legen.</target>
+      </trans-unit>
+      <trans-unit id="82acfec318119ce9b335ad54bcf20507" approved="yes">
+        <source>Please choose an icon.</source>
+        <target state="final">Bitte wählen Sie ein Symbol.</target>
+      </trans-unit>
+      <trans-unit id="9473f383902982ab4590a6636f002041" approved="yes">
+        <source>Please choose a font.</source>
+        <target state="final">Bitte wählen Sie eine Schrift.</target>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="views/templates/front/designer.tpl" source-language="en" target-language="de" datatype="plaintext">
+    <body>
+      <trans-unit id="ff45928bae52c5b4f2da6037be70b4cc" approved="yes">
+        <source>Design your tag</source>
+        <target state="final">Gestalten Sie Ihre Marke</target>
+      </trans-unit>
+      <trans-unit id="aaef668a12f954895342dcc5978e1127" approved="yes">
+        <source>Front of the tag</source>
+        <target state="final">Vorderseite der Marke</target>
+      </trans-unit>
+      <trans-unit id="5d49b07be4cbfc05d1e979c122507101" approved="yes">
+        <source>Back of the tag</source>
+        <target state="final">Rückseite der Marke</target>
+      </trans-unit>
+      <trans-unit id="5835bab1ade0060909e31a06af2e2cde" approved="yes">
+        <source>Front</source>
+        <target state="final">Vorderseite</target>
+      </trans-unit>
+      <trans-unit id="0557fa923dcee4d0f86b1409f5c2167f" approved="yes">
+        <source>Back</source>
+        <target state="final">Rückseite</target>
+      </trans-unit>
+      <trans-unit id="410bab1c725ac6ae44fde3457aa4ae13" approved="yes">
+        <source>Pet name</source>
+        <target state="final">Name des Tieres</target>
+      </trans-unit>
+      <trans-unit id="194f5394ae2e9c74dc3c441b92862d1d" approved="yes">
+        <source>Font</source>
+        <target state="final">Schrift</target>
+      </trans-unit>
+      <trans-unit id="817434295a673aed431435658b65d9a7" approved="yes">
+        <source>Icon</source>
+        <target state="final">Symbol</target>
+      </trans-unit>
+      <trans-unit id="e9f79aa2b1f455a52497a126d9442582" approved="yes">
+        <source>Address line 1</source>
+        <target state="final">Adresszeile 1</target>
+      </trans-unit>
+      <trans-unit id="3d4d4cac03e194ab20154382cd544e0f" approved="yes">
+        <source>Address line 2</source>
+        <target state="final">Adresszeile 2</target>
+      </trans-unit>
+      <trans-unit id="1f8261d17452a959e013666c5df45e07" approved="yes">
+        <source>Phone number</source>
+        <target state="final">Telefonnummer</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

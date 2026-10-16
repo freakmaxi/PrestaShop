@@ -2,7 +2,11 @@
  * For the full copyright and license information, please view the
  * LICENSE.md file that was distributed with this source code.
  *}
- 
+
+{* Products set up in the tagdesigner module get its live tag designer instead of this form *}
+{if !empty($tag_designer) && !$configuration.is_catalog}
+  {include file='module:tagdesigner/views/templates/front/designer.tpl'}
+{else}
 {if !$configuration.is_catalog}
   <section class="product__customization product-customization js-product-customization">
     <p class="product-customization__title h4">{l s='Product customization' d='Shop.Theme.Catalog'}</p>
@@ -60,3 +64,4 @@
     {/block}
   {/if}
 </section>
+{/if}
