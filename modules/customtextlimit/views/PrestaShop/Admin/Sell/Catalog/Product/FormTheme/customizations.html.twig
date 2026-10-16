@@ -1,0 +1,39 @@
+{#
+ # Override of @PrestaShop/Admin/Sell/Catalog/Product/FormTheme/customizations.html.twig (PrestaShop 9.2.0)
+ # adding the "max characters" column. Compare with the core file when upgrading PrestaShop.
+ #}
+
+{%- block customization_field_row -%}
+  <li class="form-group row customization-field-row">
+    {{ form_widget(form.id) }}
+    <div class="col-md-4">
+      {{ form_widget(form.name) }}
+      {{ form_errors(form.name) }}
+    </div>
+    <div class="col-md-3">
+      {{ form_widget(form.type) }}
+      {{ form_errors(form.type) }}
+    </div>
+    <div class="col-md-2">
+      {% if form.size is defined %}
+        {{ form_widget(form.size) }}
+        {{ form_errors(form.size) }}
+      {% endif %}
+    </div>
+    <div class="col-md-1 col-3">
+      {{ form_widget(form.remove) }}
+    </div>
+    <div class="customization-field-switch col-md-2 col d-flex align-items-center">
+      {{ form_widget(form.required) }}
+      {{ form_errors(form.required) }}
+    </div>
+  </li>
+{%- endblock customization_field_row -%}
+
+{%- block collection_row -%}
+  {%- set attr = attr|merge({'data-prototype': form_row(prototype), 'data-prototype-name': prototype.vars.name}) -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' list-unstyled')|trim}) -%}
+  <ul {{ block('widget_attributes') }} data-row-index="{{ form.children|length }}">
+    {{- block('form_rows') -}}
+  </ul>
+{%- endblock collection_row -%}

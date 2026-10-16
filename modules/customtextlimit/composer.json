@@ -1,0 +1,17 @@
+{
+  "name": "jakpark/customtextlimit",
+  "description": "Per-field maximum length for product text customizations",
+  "type": "prestashop-module",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "PrestaShop\\Module\\CustomTextLimit\\": "src/"
+    }
+  },
+  "config": {
+    "prepend-autoloader": false
+  }
+}

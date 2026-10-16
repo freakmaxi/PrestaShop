@@ -1,0 +1,7 @@
+# Only send what the Dockerfile needs, not the whole PrestaShop repository
+*
+!modules/customtextlimit
+modules/customtextlimit/vendor
+!themes/hummingbird_child
+!houseofleo
+**/.DS_Store

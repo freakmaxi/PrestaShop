@@ -1,0 +1,6 @@
+services:
+  PrestaShop\Module\CustomTextLimit\Form\CustomizationFieldTypeExtension:
+    arguments:
+      - '@translator'
+    tags:
+      - { name: form.type_extension }
