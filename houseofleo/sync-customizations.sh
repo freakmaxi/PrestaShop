@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copies our module and theme from the image into the persistent web root, replacing older versions,
+# Copies our modules and theme from the image into the persistent web root, replacing older versions,
 # and clears the Symfony cache when something changed. Runs as root in the initContainer.
 set -e
 
@@ -7,7 +7,7 @@ SOURCE=/tmp/data-ps/prestashop
 ROOT=/var/www/html
 changed=0
 
-for dir in modules/customtextlimit themes/hummingbird_child; do
+for dir in modules/customtextlimit modules/tagdesigner themes/hummingbird_child; do
     # Files only on the volume are what PrestaShop generates at runtime (theme assets/cache,
     # module config*.xml): only new or modified files of the image count as a change
     if [ ! -d "$ROOT/$dir" ] || diff -rq "$SOURCE/$dir" "$ROOT/$dir" 2>&1 | grep -qv "^Only in $ROOT/"; then
@@ -23,9 +23,11 @@ done
 # by Apache (PrestaShop writes .htaccess in the root and installs modules into modules/)
 chown www-data:www-data "$ROOT" "$ROOT/modules" "$ROOT/themes"
 
-if [ "$changed" = 1 ] && [ -d "$ROOT/var/cache" ]; then
+if [ "$changed" = 1 ]; then
     echo "* Clearing cache"
     rm -rf "$ROOT/var/cache/prod" "$ROOT/var/cache/dev"
+    # The combined JS/CSS files are named after the file list, not the content: remove them so they are rebuilt
+    rm -rf "$ROOT"/themes/*/assets/cache/*
 fi
 
 echo "* Customizations are up to date"

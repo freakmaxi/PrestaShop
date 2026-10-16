@@ -1,5 +1,5 @@
 #!/bin/sh
-# Finishes the first automatic install: renames the admin folder and enables our module and child theme.
+# Finishes the first automatic install: renames the admin folder and enables our modules and child theme.
 # Never fails: a failing post-install script would leave install.lock behind and block every restart.
 cd /var/www/html || exit 0
 
@@ -17,6 +17,8 @@ fi
 
 runuser -u www-data -- php bin/console prestashop:module install customtextlimit \
     || echo "warning: could not install customtextlimit, install it from the admin"
+runuser -u www-data -- php bin/console prestashop:module install tagdesigner \
+    || echo "warning: could not install tagdesigner, install it from the admin"
 runuser -u www-data -- php bin/console prestashop:theme:enable hummingbird_child \
     || echo "warning: could not enable hummingbird_child, enable it from the admin"
 

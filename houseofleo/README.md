@@ -5,7 +5,8 @@ Branch `houseofleo` of this fork = PrestaShop tag `9.2.0` + our customizations:
 | Path | What |
 |---|---|
 | `modules/customtextlimit/` | Per-field max length for product text customizations (admin input, server-side check, `$customization_max_lengths` for the theme) |
-| `themes/hummingbird_child/` | Child of Hummingbird 2.1.x; only overrides `catalog/_partials/product-customization.tpl` to show the limit |
+| `modules/tagdesigner/` | Live engraved-tag preview on the product page, engraving SVGs on the order page, Orders > Tag engraving for marketplace orders (see its README) |
+| `themes/hummingbird_child/` | Child of Hummingbird 2.1.x; only overrides `catalog/_partials/product-customization.tpl` (shows the limit, includes the tag designer) |
 | `houseofleo/` | Image build: Dockerfile and the scripts it installs |
 
 Deployment manifests: `~/Mega/Projects/HouseOfLeo/infrastructure`.
@@ -20,10 +21,16 @@ docker push docker.hudolini.com/houseofleo/store:v<VERSION>
 Based on the official `prestashop/prestashop:9.2.0-apache` image, which installs PrestaShop on the first start
 of an empty volume. On top of it:
 
-- `post-install.sh`: after that install, renames the admin folder to `SHOP_ADMIN_FOLDER`, installs the module
+- `post-install.sh`: after that install, renames the admin folder to `SHOP_ADMIN_FOLDER`, installs the modules
   and enables the child theme.
-- `sync-customizations.sh`: run by the initContainer on every start; copies the module and theme to the volume
-  when the image carries a newer version, and clears the cache.
+- `sync-customizations.sh`: run by the initContainer on every start; copies the modules and theme to the volume
+  when the image carries a newer version, and clears the cache and the combined theme JS/CSS (their file name
+  does not change with the content).
+
+A module new to an existing volume is copied but not installed: install it once in the back office
+(Modules > Module Manager) or with `php bin/console prestashop:module install <name>` in the store container.
+A new version of an installed module (its `$this->version`) is copied too, but its upgrade script only runs from
+Modules > Module Manager (Upgrade) or `php bin/console prestashop:module upgrade <name>`.
 - `apache-env.conf`: passes `PS_TRUSTED_PROXIES` to PHP, without it Symfony ignores the ingress X-Forwarded-* headers.
 - `php.ini`: upload size (keep in line with the ingress `proxy-body-size`), memory, `max_input_vars`.
 
@@ -35,4 +42,23 @@ other than `install`: the deployment sets `PS_FOLDER_ADMIN=admin-dev`, `PS_FOLDE
 Rebase this branch on the new tag, bump the `FROM` image, then check:
 - `modules/customtextlimit/views/PrestaShop/Admin/Sell/Catalog/Product/FormTheme/customizations.html.twig`
   against the core file of the same path,
-- `themes/hummingbird_child/templates/catalog/_partials/product-customization.tpl` against the new Hummingbird.
+- `themes/hummingbird_child/templates/catalog/_partials/product-customization.tpl` against the new Hummingbird,
+- the tag designer on the product page: it moves itself below `.js-product-variants` in `#add-to-cart-or-refresh`
+  and relies on the theme replacing only that element on a combination change.
+
+## Branding
+
+PrestaShop keeps logos in the store's `img/` folder and their names in the configuration (`PS_LOGO`, `PS_LOGO_MAIL`,
+`PS_LOGO_INVOICE`, `PS_FAVICON`), so they are uploaded once in the back office, not shipped in the image:
+**Design → Theme & Logo**, then save after each file. The files are in `~/Mega/Projects/HouseOfLeo/design/branding/`.
+
+| Field | File | Why this format |
+|---|---|---|
+| Header logo | `logo-header.svg` | Sharp at any zoom. PrestaShop cannot measure an SVG (`getimagesize`), so the file itself carries its size (223×44) |
+| Mail logo | `logo-mail.png` | Mail and invoice logos must be raster; 400 px wide, on white |
+| Invoice logo | `logo-invoice.png` | 800 px wide so it stays sharp in the PDF |
+| Favicon | `favicon.ico` | Only `.ico` is accepted; lion head at 16, 32 and 48 px |
+
+Source artwork: `~/Projects/HouseOfLeo/corporate/web/src/assets/brand/` (also used by the corporate site). Brand
+colours: purple `#330066`, light blue `#7093ff`.
+

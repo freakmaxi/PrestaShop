@@ -2,6 +2,8 @@
 *
 !modules/customtextlimit
 modules/customtextlimit/vendor
+!modules/tagdesigner
+modules/tagdesigner/tools
 !themes/hummingbird_child
 !houseofleo
 **/.DS_Store

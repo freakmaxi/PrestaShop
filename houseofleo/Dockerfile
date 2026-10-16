@@ -1,4 +1,4 @@
-# House of Leo store image: official PrestaShop 9.2.0 + our module and child theme.
+# House of Leo store image: official PrestaShop 9.2.0 + our modules and child theme.
 # Build from the repository root (nodes are amd64):
 #   docker build --platform linux/amd64 -f houseofleo/Dockerfile -t docker.hudolini.com/houseofleo/store:v<VERSION> .
 # Deployed by infrastructure/65-houseofleo/hudolini-eu-01-production/store (Mega/Projects/HouseOfLeo).
@@ -13,6 +13,7 @@ FROM prestashop/prestashop:9.2.0-apache
 
 # Files under /tmp/data-ps/prestashop are copied to the web root on the first start (empty volume)
 COPY --from=module-autoload --chown=www-data:www-data /module /tmp/data-ps/prestashop/modules/customtextlimit
+COPY --chown=www-data:www-data modules/tagdesigner /tmp/data-ps/prestashop/modules/tagdesigner
 COPY --chown=www-data:www-data themes/hummingbird_child /tmp/data-ps/prestashop/themes/hummingbird_child
 
 # Run by the image entrypoint right after the automatic install
