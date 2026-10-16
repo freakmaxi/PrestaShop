@@ -2,7 +2,7 @@
 <module>
     <name>tagdesigner</name>
     <displayName><![CDATA[Tag designer]]></displayName>
-    <version><![CDATA[1.1.0]]></version>
+    <version><![CDATA[1.2.0]]></version>
     <description><![CDATA[Live preview of engraved tags on the product page, engraving files on the order page.]]></description>
     <author><![CDATA[Jakpark]]></author>
     <tab><![CDATA[front_office_features]]></tab>

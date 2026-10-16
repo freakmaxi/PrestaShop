@@ -5,7 +5,7 @@ Branch `houseofleo` of this fork = PrestaShop tag `9.2.0` + our customizations:
 | Path | What |
 |---|---|
 | `modules/customtextlimit/` | Per-field max length for product text customizations (admin input, server-side check, `$customization_max_lengths` for the theme) |
-| `modules/tagdesigner/` | Live engraved-tag preview on the product page, engraving SVGs on the order page, Orders > Tag engraving for marketplace orders (see its README) |
+| `modules/tagdesigner/` | Live engraved-tag preview on the product page, engraving SVGs on the order page, Orders > Tag engraving for marketplace orders, QR tags with pet-id codes (needs `PETID_ADMIN_KEY`; see its README) |
 | `themes/hummingbird_child/` | Child of Hummingbird 2.1.x; only overrides `catalog/_partials/product-customization.tpl` (shows the limit, includes the tag designer) |
 | `houseofleo/` | Image build: Dockerfile and the scripts it installs |
 

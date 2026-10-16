@@ -7,6 +7,7 @@
  *   backFont, hole          font of the back side, ring hole diameter in mm
  *   defaultFont, defaultIcon preselected on the product page
  *   products                product id => role => customization field id
+ *   qrProducts              product ids of QR tags: the back is a pet-id QR code, only the front roles are mapped
  */
 
 namespace PrestaShop\Module\TagDesigner;
@@ -29,6 +30,12 @@ class Settings
     // Customization text fields the designer fills, in the order they are mapped by default
     public const ROLES = ['name', 'icon', 'font', 'line1', 'line2', 'phone'];
 
+    // A QR tag has only the front: its back is the pet-id QR code
+    public const QR_ROLES = ['name', 'icon', 'font'];
+
+    public const TYPE_ADDRESS = 'address';
+    public const TYPE_QR = 'qr';
+
     // Character limits of the texts when the product has none (customtextlimit sets them per field)
     private const LIMITS = ['name' => 12, 'line1' => 27, 'line2' => 25, 'phone' => 20];
 
@@ -42,6 +49,7 @@ class Settings
         'defaultFont' => 'ST10',
         'defaultIcon' => 'C02',
         'products' => [],
+        'qrProducts' => [],
     ];
 
     /** @var string */
@@ -70,17 +78,36 @@ class Settings
     }
 
     /**
-     * Role => customization field id for a product with the designer, null otherwise.
+     * Role => customization field id for a product with the designer, null otherwise. A QR tag has only the
+     * roles of QR_ROLES.
      */
     public function product(int $productId): ?array
     {
         $products = $this->all()['products'];
         $roles = $products[(string) $productId] ?? null;
-        if (!is_array($roles) || count(array_filter($roles)) !== count(self::ROLES)) {
+        if (!is_array($roles)) {
             return null;
         }
+        $mapped = [];
+        foreach (self::rolesOf($this->type($productId)) as $role) {
+            if (empty($roles[$role])) {
+                return null;
+            }
+            $mapped[$role] = (int) $roles[$role];
+        }
 
-        return array_map('intval', $roles);
+        return $mapped;
+    }
+
+    public function type(int $productId): string
+    {
+        return in_array($productId, array_map('intval', $this->all()['qrProducts']), true) ? self::TYPE_QR : self::TYPE_ADDRESS;
+    }
+
+    /** @return string[] */
+    public static function rolesOf(string $type): array
+    {
+        return $type === self::TYPE_QR ? self::QR_ROLES : self::ROLES;
     }
 
     /**
@@ -94,6 +121,9 @@ class Settings
         foreach (array_keys($this->all()['products']) as $productId) {
             $roles = $this->product((int) $productId);
             if (!$roles) {
+                continue;
+            }
+            if ($this->type((int) $productId) === self::TYPE_QR) {
                 continue;
             }
             if (Module::isEnabled('customtextlimit') && Module::getInstanceByName('customtextlimit') && class_exists(LimitRepository::class)) {
@@ -205,6 +235,8 @@ class Settings
                 'id' => (int) $productId,
                 'name' => $product->id ? $product->name : '?',
                 'roles' => $roles,
+                'type' => $this->type((int) $productId),
+                'typeRoles' => self::rolesOf($this->type((int) $productId)),
                 'fields' => $this->textFields((int) $productId, $langId),
                 'complete' => $this->product((int) $productId) !== null,
             ];
@@ -285,33 +317,45 @@ class Settings
         }
 
         $products = [];
+        $qrProducts = [];
         foreach ((array) ($input['products'] ?? []) as $productId => $roles) {
             if (!empty($roles['remove'])) {
                 continue;
             }
-            $products[(string) (int) $productId] = array_combine(
-                self::ROLES,
-                array_map(static fn ($role) => (int) ($roles[$role] ?? 0), self::ROLES)
+            $productId = (int) $productId;
+            $type = ($roles['type'] ?? '') === self::TYPE_QR ? self::TYPE_QR : self::TYPE_ADDRESS;
+            $products[(string) $productId] = array_combine(
+                self::rolesOf($type),
+                array_map(static fn ($role) => (int) ($roles[$role] ?? 0), self::rolesOf($type))
             );
+            if ($type === self::TYPE_QR) {
+                $qrProducts[] = $productId;
+            }
         }
 
         $newId = (int) ($input['addProduct'] ?? 0);
         if ($newId && !isset($products[(string) $newId])) {
+            $type = ($input['addType'] ?? '') === self::TYPE_QR ? self::TYPE_QR : self::TYPE_ADDRESS;
+            $roles = self::rolesOf($type);
             $fields = array_keys($this->textFields($newId, (int) Configuration::get('PS_LANG_DEFAULT')));
             if (!(new Product($newId))->id) {
                 $errors[] = sprintf('Product %d does not exist.', $newId);
             } else {
                 // Default mapping: the product's text fields in creation order
                 $products[(string) $newId] = array_combine(
-                    self::ROLES,
-                    array_map(static fn ($i) => (int) ($fields[$i] ?? 0), array_keys(self::ROLES))
+                    $roles,
+                    array_map(static fn ($i) => (int) ($fields[$i] ?? 0), array_keys($roles))
                 );
-                if (count($fields) < count(self::ROLES)) {
-                    $errors[] = sprintf('Product %d needs %d text customization fields, it has %d.', $newId, count(self::ROLES), count($fields));
+                if ($type === self::TYPE_QR) {
+                    $qrProducts[] = $newId;
+                }
+                if (count($fields) < count($roles)) {
+                    $errors[] = sprintf('Product %d needs %d text customization fields, it has %d.', $newId, count($roles), count($fields));
                 }
             }
         }
         $values['products'] = $products;
+        $values['qrProducts'] = $qrProducts;
 
         Configuration::updateGlobalValue(self::CONFIG_KEY, json_encode($values));
         $this->values = $values;

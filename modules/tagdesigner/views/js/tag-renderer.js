@@ -422,7 +422,8 @@
   let uid = 0;
 
   /**
-   * Product page / order page preview. look: { tag: '#hex', engrave: '#hex' }
+   * Product page / order page preview. look: { tag: '#hex', engrave: '#hex' }. Shapes: kind engrave, bare (drawn
+   * in the tag colour), ghost (a placeholder text, faded) or sample (a placeholder QR code); evenodd: fill rule
    */
   function previewSvg(side, look) {
     uid += 1;
@@ -433,7 +434,8 @@
     const paths = side.shapes.map((shape) => {
       const fill = shape.kind === 'bare' ? look.tag : look.engrave;
       const opacity = shape.kind === 'ghost' ? ' fill-opacity="0.32"' : '';
-      return `<path d="${toPathData(shape.commands)}" fill="${fill}"${opacity}/>`;
+      const rule = shape.evenodd ? ' fill-rule="evenodd"' : '';
+      return `<path d="${toPathData(shape.commands)}" fill="${fill}"${opacity}${rule}/>`;
     }).join('');
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-r - pad} ${-r - pad} ${2 * (r + pad)} ${2 * (r + pad)}" role="img">`
       + '<defs>'
@@ -456,15 +458,15 @@
   }
 
   /**
-   * Engraving file: real size in mm, text as outlines, ghosts left out. The tag outline and the hole are in their
-   * own group ("guide", red hairline) for positioning in the laser software.
+   * Engraving file: real size in mm, text as outlines, ghosts and samples left out. The tag outline and the hole
+   * are in their own group ("guide", red hairline) for positioning in the laser software.
    */
   function engravingSvg(side, title) {
     const r = side.diameter / 2;
     const g = geometry(side.diameter, side.hole);
     const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-    const paths = side.shapes.filter((shape) => shape.kind !== 'ghost').map((shape) => (
-      `<path d="${toPathData(shape.commands, true)}" fill="${shape.kind === 'bare' ? '#ffffff' : '#000000'}"/>`
+    const paths = side.shapes.filter((shape) => shape.kind !== 'ghost' && shape.kind !== 'sample').map((shape) => (
+      `<path d="${toPathData(shape.commands, true)}" fill="${shape.kind === 'bare' ? '#ffffff' : '#000000'}"${shape.evenodd ? ' fill-rule="evenodd"' : ''}/>`
     )).join('\n    ');
     return '<?xml version="1.0" encoding="UTF-8"?>\n'
       + `<svg xmlns="http://www.w3.org/2000/svg" width="${side.diameter}mm" height="${side.diameter}mm" viewBox="${-r} ${-r} ${2 * r} ${2 * r}">\n`

@@ -1,6 +1,7 @@
 <?php
 /**
- * Reads the tag designs of an order: one entry per ordered line with the designer.
+ * Reads the tag designs of an order: one entry per ordered line with the designer. A QR tag line also has its
+ * pet-id tags made so far, one per tag ordered.
  */
 
 namespace PrestaShop\Module\TagDesigner;
@@ -55,7 +56,7 @@ class OrderDesigns
             ) ?: [] as $row) {
                 $texts[(int) $row['index']] = (string) $row['value'];
             }
-            $values = [];
+            $values = array_fill_keys(Settings::ROLES, '');
             foreach ($roles as $role => $fieldId) {
                 $values[$role] = $texts[$fieldId] ?? '';
             }
@@ -69,6 +70,7 @@ class OrderDesigns
 
             $designs[] = [
                 'line' => (int) $line['id_order_detail'],
+                'type' => $this->settings->type((int) $line['product_id']),
                 'name' => (string) $line['product_name'],
                 'quantity' => (int) $line['product_quantity'],
                 'diameter' => $diameter,
@@ -77,7 +79,31 @@ class OrderDesigns
             ];
         }
 
+        $qrLines = array_column(array_filter($designs, static fn ($d) => $d['type'] === Settings::TYPE_QR), 'line');
+        $tags = (new PetIds())->forSources(PetIds::ORDER, $qrLines);
+        foreach ($designs as &$design) {
+            $design['tags'] = $design['type'] === Settings::TYPE_QR ? array_values($tags[$design['line']] ?? []) : [];
+        }
+        unset($design);
+
         return $designs;
+    }
+
+    /**
+     * The design of one ordered line with the designer, or null.
+     */
+    public function forLine(int $orderDetailId): ?array
+    {
+        $orderId = (int) Db::getInstance()->getValue(
+            'SELECT `id_order` FROM `' . _DB_PREFIX_ . 'order_detail` WHERE `id_order_detail` = ' . $orderDetailId
+        );
+        foreach ($this->forOrder($orderId) as $design) {
+            if ($design['line'] === $orderDetailId) {
+                return $design;
+            }
+        }
+
+        return null;
     }
 
     /** @return int[] */

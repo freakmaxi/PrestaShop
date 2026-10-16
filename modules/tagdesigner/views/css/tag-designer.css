@@ -200,6 +200,12 @@
   fill: currentColor;
 }
 
+.tag-designer__note {
+  margin-block-end: 1.25rem;
+  font-size: 0.875rem;
+  color: #5d5f6e;
+}
+
 .tag-designer__status {
   margin-block-start: 0.5rem;
 }

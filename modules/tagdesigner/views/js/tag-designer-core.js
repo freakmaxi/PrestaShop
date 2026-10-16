@@ -2,6 +2,9 @@
  * The part of the tag designer shared by the product page (tag-designer.js) and the back office engraving page
  * (tag-engraving-tool.js): the text inputs with their counters, the font and icon pickers and the preview of both
  * sides. A subclass says which size and colour to draw (look()) and calls start() once it is set up.
+ *
+ * cfg.type "qr": a QR tag, whose back is a pet-id QR code (tag-qr.js) and which has no address fields. Until the
+ * tag exists the preview shows a sample code.
  */
 (function () {
   'use strict';
@@ -61,6 +64,9 @@
 
       TEXT_ROLES.forEach((role) => {
         const input = this.inputs[role];
+        if (!input) {
+          return;
+        }
         input.maxLength = this.max[role] || 250;
         input.value = this.state[role];
         input.addEventListener('input', () => this.set(role, input.value));
@@ -251,6 +257,7 @@
         largest: Math.max(diameter, ...diameters),
         tag: colour.hex,
         engrave: colour.white ? ENGRAVE.white : ENGRAVE.black,
+        white: Boolean(colour.white),
       };
     }
 
@@ -258,36 +265,58 @@
       return this.lookFor(null, null);
     }
 
+    isQr() {
+      return this.cfg.type === 'qr';
+    }
+
+    // The pet-id tag of the back ({ id, url }), null for the sample code
+    qrTag() {
+      return null;
+    }
+
     render() {
       const token = ++this.renderToken;
       const look = this.look();
       const s = this.state;
+      const qr = this.isQr();
       this.rendering = Promise.all([
         R.loadFont(this.url('font', s.font)),
         R.loadFont(this.url('font', this.cfg.backFont)),
         R.loadIcon(this.url('icon', s.icon)),
-      ]).then(([font, backFont, icon]) => {
+        qr ? window.TagQr.loadLogo(this.cfg.assets) : null,
+      ]).then(([font, backFont, icon, logo]) => {
         if (token !== this.renderToken) {
           return;
         }
         const front = R.layoutFront({
           diameter: look.diameter, hole: this.cfg.hole, font, name: s.name, nameGhost: this.texts.nameGhost, icon,
         });
-        const back = R.layoutBack({
-          diameter: look.diameter,
-          hole: this.cfg.hole,
-          font: backFont,
-          lines: [s.line1, s.line2],
-          phone: s.phone,
-          ghost: { lines: [this.texts.line1Ghost, this.texts.line2Ghost], phone: this.texts.phoneGhost },
-        });
+        const tag = qr ? this.qrTag() : null;
+        const back = qr
+          ? window.TagQr.layoutBack({
+            diameter: look.diameter,
+            hole: this.cfg.hole,
+            text: tag && tag.url,
+            seed: tag && tag.id,
+            sample: !tag,
+            negative: look.white,
+            logo,
+          })
+          : R.layoutBack({
+            diameter: look.diameter,
+            hole: this.cfg.hole,
+            font: backFont,
+            lines: [s.line1, s.line2],
+            phone: s.phone,
+            ghost: { lines: [this.texts.line1Ghost, this.texts.line2Ghost], phone: this.texts.phoneGhost },
+          });
         this.preview.querySelector('.js-tag-front').innerHTML = R.previewSvg(front, look);
         this.preview.querySelector('.js-tag-back').innerHTML = R.previewSvg(back, look);
         // The smaller tag is drawn smaller, so the two sizes compare
         this.preview.style.setProperty('--tag-scale', String(look.diameter / look.largest));
         this.preview.querySelector('.js-tag-size').textContent = `Ø ${String(look.diameter).replace('.', ',')} mm`;
         this.fonts = { front: font, back: backFont };
-        this.sides = { front, back, diameter: look.diameter };
+        this.sides = { front, back, diameter: look.diameter, logo };
       }).catch(() => {
         if (token === this.renderToken) {
           this.showStatus([this.texts.saveFailed]);
@@ -307,7 +336,7 @@
         if (front) {
           errors.push(this.texts.fontMissing.replace('%chars%', front));
         }
-        const back = R.missingChars(this.fonts.back, [s.line1, s.line2, s.phone].join(''));
+        const back = this.isQr() ? '' : R.missingChars(this.fonts.back, [s.line1, s.line2, s.phone].join(''));
         if (back) {
           errors.push(this.texts.backMissing.replace('%chars%', back));
         }

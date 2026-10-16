@@ -143,7 +143,8 @@
 
     save() {
       const body = new FormData();
-      Form.ROLES.forEach((role) => body.append(this.cfg.fields[role], this.state[role].trim()));
+      // A QR tag has only the front fields
+      Form.ROLES.filter((role) => this.cfg.fields[role]).forEach((role) => body.append(this.cfg.fields[role], this.state[role].trim()));
       body.append('submitCustomizedData', '1');
       const signature = this.signature();
 

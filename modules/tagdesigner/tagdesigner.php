@@ -2,6 +2,7 @@
 /**
  * Tag designer: live preview of an engraved tag on the product page, and its engraving files on the order page.
  * Orders > Tag engraving designs tags sold elsewhere, keeps them in a history and makes their engraving files.
+ * QR tags get their back (a pet-id QR code) and an access card from the pet-id service.
  */
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -10,9 +11,13 @@ if (!defined('_PS_VERSION_')) {
 require_once __DIR__ . '/src/Settings.php';
 require_once __DIR__ . '/src/OrderDesigns.php';
 require_once __DIR__ . '/src/Engravings.php';
+require_once __DIR__ . '/src/PetIdClient.php';
+require_once __DIR__ . '/src/PetIds.php';
 
 use PrestaShop\Module\TagDesigner\Engravings;
 use PrestaShop\Module\TagDesigner\OrderDesigns;
+use PrestaShop\Module\TagDesigner\PetIdClient;
+use PrestaShop\Module\TagDesigner\PetIds;
 use PrestaShop\Module\TagDesigner\Settings;
 
 class TagDesigner extends Module
@@ -25,6 +30,8 @@ class TagDesigner extends Module
 
     public const OPENTYPE = 'views/lib/opentype-1.3.4.min.js';
 
+    public const QRCODE = 'views/lib/qrcode-1.5.4.min.js';
+
     // Back office page of the engraving history, under Orders
     public const ADMIN_TAB = 'AdminTagEngraving';
 
@@ -35,7 +42,7 @@ class TagDesigner extends Module
     {
         $this->name = 'tagdesigner';
         $this->tab = 'front_office_features';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Jakpark';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -64,6 +71,7 @@ class TagDesigner extends Module
     {
         Configuration::deleteByName(Settings::CONFIG_KEY);
         (new Engravings())->dropTable();
+        (new PetIds())->dropTable();
         $tabId = (int) Tab::getIdFromClassName(self::ADMIN_TAB);
         if ($tabId) {
             (new Tab($tabId))->delete();
@@ -73,11 +81,11 @@ class TagDesigner extends Module
     }
 
     /**
-     * The history table and the Orders > Tag engraving menu entry (also run by upgrade/upgrade-1.1.0.php).
+     * The tables and the Orders > Tag engraving menu entry (also run by the upgrades).
      */
     public function installEngravingPage(): bool
     {
-        if (!(new Engravings())->createTable()) {
+        if (!(new Engravings())->createTable() || !(new Engravings())->addType() || !(new PetIds())->createTable()) {
             return false;
         }
         if (Tab::getIdFromClassName(self::ADMIN_TAB)) {
@@ -111,9 +119,11 @@ class TagDesigner extends Module
             $output .= $errors ? $this->displayError($errors) : $this->displayConfirmation($this->trans('Settings updated.', [], 'Admin.Notifications.Success'));
         }
 
+        $petId = new PetIdClient();
         $this->context->smarty->assign([
             'action' => $this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name]),
             'form' => $this->settings->formData((int) $this->context->language->id),
+            'petid' => ['configured' => $petId->isConfigured(), 'endpoints' => $petId->endpoints()],
         ]);
 
         return $output . $this->display(__FILE__, 'views/templates/admin/configure.tpl');
@@ -129,6 +139,10 @@ class TagDesigner extends Module
         $controller->registerStylesheet('tagdesigner', 'modules/' . $this->name . '/views/css/tag-designer.css');
         $controller->registerJavascript('tagdesigner-opentype', 'modules/' . $this->name . '/' . self::OPENTYPE, ['priority' => 200]);
         $controller->registerJavascript('tagdesigner-renderer', 'modules/' . $this->name . '/views/js/tag-renderer.js', ['priority' => 201]);
+        if ($this->settings->type((int) Tools::getValue('id_product')) === Settings::TYPE_QR) {
+            $controller->registerJavascript('tagdesigner-qrcode', 'modules/' . $this->name . '/' . self::QRCODE, ['priority' => 201]);
+            $controller->registerJavascript('tagdesigner-qr', 'modules/' . $this->name . '/views/js/tag-qr.js', ['priority' => 202]);
+        }
         $controller->registerJavascript('tagdesigner-form', 'modules/' . $this->name . '/views/js/tag-designer-core.js', ['priority' => 202]);
         $controller->registerJavascript('tagdesigner', 'modules/' . $this->name . '/views/js/tag-designer.js', ['priority' => 203]);
     }
@@ -175,11 +189,20 @@ class TagDesigner extends Module
             'designs' => $designs,
             'order_reference' => $order->reference,
             'assets' => $this->getPathUri(),
-            'opentype' => $this->getPathUri() . self::OPENTYPE,
+            'scripts' => [self::OPENTYPE, self::QRCODE, 'views/js/tag-renderer.js', 'views/js/tag-qr.js', 'views/js/tag-engraving.js'],
             'settings' => $this->settings->rendererSettings(),
+            'petid_url' => $this->petIdUrl(),
         ]);
 
         return $this->display(__FILE__, 'views/templates/admin/order-designs.tpl');
+    }
+
+    /**
+     * Where the order page and the engraving page create the pet-id tag of a QR tag (AdminTagEngravingController).
+     */
+    public function petIdUrl(): string
+    {
+        return $this->context->link->getAdminLink(self::ADMIN_TAB, true, [], ['ajax' => 1, 'action' => 'petId']);
     }
 
     /**
@@ -194,6 +217,7 @@ class TagDesigner extends Module
 
         return array_merge($this->settings->rendererSettings(), [
             'productId' => $productId,
+            'type' => $this->settings->type($productId),
             'fields' => $roles,
             'saveUrl' => $this->context->link->getProductLink($productId),
             'texts' => [

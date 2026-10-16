@@ -1,6 +1,7 @@
 /**
  * Back office engraving page: the shop's designer (tag-designer-core.js) for tags sold elsewhere. Size and colour
  * come from the page's own inputs; the design is downloaded right away or saved to the history with the form.
+ * A QR tag has no address; its QR back and access card are downloaded from the history, once it is saved.
  */
 (function () {
   'use strict';
@@ -18,6 +19,8 @@
         if (event.target.matches('.js-tag-look')) {
           this.hideStatus();
           this.render();
+        } else if (event.target.matches('.js-tag-type')) {
+          this.setType(event.target.value);
         }
       });
       root.querySelectorAll('.js-tag-tool-download').forEach((button) => {
@@ -34,6 +37,23 @@
       this.changed('font');
       this.changed('icon');
       this.start();
+    }
+
+    setType(type) {
+      this.cfg.type = type;
+      this.root.querySelectorAll('.js-tag-address-only').forEach((el) => {
+        el.hidden = type === 'qr';
+      });
+      this.root.querySelectorAll('.js-tag-qr-only').forEach((el) => {
+        el.hidden = type !== 'qr';
+      });
+      this.hideStatus();
+      this.render();
+    }
+
+    // The QR code of the design being edited, once made; a sample before
+    qrTag() {
+      return this.cfg.qrTag || null;
     }
 
     // The pickers are buttons: the chosen codes go with the form in hidden inputs

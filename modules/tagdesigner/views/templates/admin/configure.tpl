@@ -103,14 +103,40 @@
   </div>
 
   <div class="panel">
+    <div class="panel-heading"><i class="icon-qrcode"></i> {l s='QR tags (pet-id)' d='Modules.Tagdesigner.Admin'}</div>
+    <p>
+      {if $petid.configured}
+        <span class="label label-success">{l s='Connected' d='Modules.Tagdesigner.Admin'}</span>
+      {else}
+        <span class="label label-warning">{l s='Admin key missing' d='Modules.Tagdesigner.Admin'}</span>
+      {/if}
+      {l s='The QR code and the access card of a QR tag are made the first time its files are downloaded: the shop creates the tag in pet-id and its hol.red link.' d='Modules.Tagdesigner.Admin'}
+    </p>
+    <table class="table" style="max-width:720px">
+      <tr><th>PETID_ADMIN_KEY</th><td>{if $petid.configured}{l s='set' d='Modules.Tagdesigner.Admin'}{else}<span class="text-danger">{l s='not set' d='Modules.Tagdesigner.Admin'}</span>{/if}</td></tr>
+      <tr><th>PETID_API_URL</th><td><code>{$petid.endpoints.api|escape:'html':'UTF-8'}</code></td></tr>
+      <tr><th>PETID_SHORTENER_URL</th><td><code>{$petid.endpoints.shortener|escape:'html':'UTF-8'}</code></td></tr>
+      <tr><th>PETID_TAG_URL</th><td><code>{$petid.endpoints.tagUrl|escape:'html':'UTF-8'}</code></td></tr>
+    </table>
+    <p class="help-block">{l s='Environment variables of the store container; the key comes from a secret.' d='Modules.Tagdesigner.Admin'}</p>
+  </div>
+
+  <div class="panel">
     <div class="panel-heading"><i class="icon-tag"></i> {l s='Products' d='Modules.Tagdesigner.Admin'}</div>
-    <p>{l s='Each product needs six text customization fields (Catalog > Products > Details > Customization). Map them to what the designer fills in.' d='Modules.Tagdesigner.Admin'}</p>
+    <p>{l s='Each product needs text customization fields (Catalog > Products > Details > Customization): six for an address tag, three (pet name, icon, font) for a QR tag. Map them to what the designer fills in.' d='Modules.Tagdesigner.Admin'}</p>
     {foreach $form.products as $product}
       <h4>#{$product.id|intval} {$product.name|escape:'html':'UTF-8'}
         {if !$product.complete}<span class="label label-warning">{l s='Incomplete: the designer is off for this product' d='Modules.Tagdesigner.Admin'}</span>{/if}
       </h4>
       <div class="row" style="margin-bottom:12px">
-        {foreach $form.roles as $role}
+        <div class="col-lg-2">
+          <label>{l s='Back side' d='Modules.Tagdesigner.Admin'}</label>
+          <select name="tagdesigner[products][{$product.id|intval}][type]">
+            <option value="address" {if $product.type == 'address'}selected{/if}>{l s='Address and phone' d='Modules.Tagdesigner.Admin'}</option>
+            <option value="qr" {if $product.type == 'qr'}selected{/if}>{l s='QR code (pet-id)' d='Modules.Tagdesigner.Admin'}</option>
+          </select>
+        </div>
+        {foreach $product.typeRoles as $role}
           <div class="col-lg-2">
             <label>{$role|escape:'html':'UTF-8'}</label>
             <select name="tagdesigner[products][{$product.id|intval}][{$role|escape:'html':'UTF-8'}]">
@@ -131,7 +157,14 @@
       <div class="col-lg-2">
         <input type="text" name="tagdesigner[addProduct]" id="td-add-product" value="">
       </div>
+      <div class="col-lg-2">
+        <select name="tagdesigner[addType]" aria-label="{l s='Back side' d='Modules.Tagdesigner.Admin'}">
+          <option value="address">{l s='Address and phone' d='Modules.Tagdesigner.Admin'}</option>
+          <option value="qr">{l s='QR code (pet-id)' d='Modules.Tagdesigner.Admin'}</option>
+        </select>
+      </div>
     </div>
+    <p class="help-block">{l s='After changing the back side of a product, save once more to map its fields.' d='Modules.Tagdesigner.Admin'}</p>
     <div class="panel-footer">
       <button type="submit" name="submitTagDesigner" class="btn btn-default pull-right"><i class="process-icon-save"></i> {l s='Save' d='Admin.Actions'}</button>
     </div>

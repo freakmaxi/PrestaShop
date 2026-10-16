@@ -9,6 +9,10 @@ white (left bare: a light area drawn over a dark one, like the panels of the foo
 
 Fonts (<design>/_fonts/Coded/STnn.ttf) are subset to Latin (German, Turkish, French, Spanish...) and saved as WOFF,
 which opentype.js reads in the browser.
+
+The House of Leo logo in the middle of the QR codes (<design>/../tools/hol_logo.svg, drawn in the coordinates of the
+reference QR code of tools/generate-qr.js) becomes views/img/qr-logo.svg, centred on (0, 0) in the same units
+(one QR module = 469.221).
 """
 import re
 import subprocess
@@ -18,6 +22,11 @@ from pathlib import Path
 MODULE = Path(__file__).resolve().parent.parent
 ICONS_OUT = MODULE / 'views' / 'icons'
 FONTS_OUT = MODULE / 'views' / 'fonts'
+LOGO_OUT = MODULE / 'views' / 'img' / 'qr-logo.svg'
+
+# Centre of the 29-module reference QR code the logo was drawn on: 4 modules of quiet zone + 14.5 modules
+QR_MODULE = 469.221
+QR_CENTRE = (4 + 29 / 2) * QR_MODULE
 
 UNICODES = 'U+0020-007E,U+00A0-00FF,U+0100-017F,U+2013-2014,U+2018-201E,U+2022,U+2026,U+20AC'
 
@@ -111,6 +120,20 @@ def build_icon(src: Path) -> str:
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">' + ''.join(paths) + '</svg>\n'
 
 
+def build_logo(src: Path) -> str:
+    svg = src.read_text()
+    paths = []
+    for tag in re.findall(r'<path\b[^>]*>', svg, re.S):
+        d = re.search(r'\sd="([^"]*)"', tag, re.S)
+        if not d:
+            continue
+        light = re.search(r'fill:\s*#fff', tag) is not None
+        paths.append(f'<path fill="{"#fff" if light else "#000"}" d="{absolute_path(d.group(1), -QR_CENTRE, -QR_CENTRE)}"/>')
+    if re.search(r'transform', svg):
+        raise ValueError(f'{src.name}: transforms are not supported')
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1900 -2100 3800 4200">' + ''.join(paths) + '</svg>\n'
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
@@ -130,6 +153,11 @@ def main() -> None:
             '--layout-features=kern,liga,calt,clig', f'--output-file={FONTS_OUT / (src.stem + ".woff")}',
         ], check=True, stderr=subprocess.DEVNULL)
     print(f'{len(fonts)} fonts -> {FONTS_OUT}')
+
+    logo = design.parent / 'tools' / 'hol_logo.svg'
+    LOGO_OUT.parent.mkdir(parents=True, exist_ok=True)
+    LOGO_OUT.write_text(build_logo(logo))
+    print(f'QR logo -> {LOGO_OUT}')
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@
         {/if}
       </div>
 
-      <div class="row js-tag-engraving-tool">
+      <div class="row tag-engraving__layout js-tag-engraving-tool">
         <script type="application/json" class="js-tag-designer-config">{$config|json_encode nofilter}</script>
 
         <div class="col-lg-7">
@@ -34,6 +34,20 @@
             <label class="required" for="tag-engraving-reference">{l s='Order reference' d='Modules.Tagdesigner.Admin'}</label>
             <input class="form-control js-tag-reference" id="tag-engraving-reference" name="reference" type="text" maxlength="{$limits.reference|intval}" value="{$values.reference|escape:'html':'UTF-8'}" placeholder="Etsy 1234567" required>
             <p class="help-block">{l s='Shop and order number, also the name of the files.' d='Modules.Tagdesigner.Admin'}</p>
+          </div>
+
+          <div class="tag-designer__field">
+            <span class="d-block" id="tag-engraving-type"><strong>{l s='Tag' d='Modules.Tagdesigner.Admin'}</strong></span>
+            <div class="tag-engraving__colours" role="radiogroup" aria-labelledby="tag-engraving-type">
+              <label class="tag-engraving__colour">
+                <input class="js-tag-type" type="radio" name="type" value="address" {if $values.type != 'qr'}checked{/if}>
+                {l s='Address tag' d='Modules.Tagdesigner.Admin'}
+              </label>
+              <label class="tag-engraving__colour">
+                <input class="js-tag-type" type="radio" name="type" value="qr" {if $values.type == 'qr'}checked{/if}>
+                {l s='QR tag (pet-id)' d='Modules.Tagdesigner.Admin'}
+              </label>
+            </div>
           </div>
 
           <div class="row">
@@ -76,7 +90,13 @@
             </div>
           </fieldset>
 
-          <fieldset class="tag-designer__group">
+          <div class="alert alert-info js-tag-qr-only" {if $values.type != 'qr'}hidden{/if}>
+            {l s='The back is the pet-id QR code. Save the design: its QR back and access card are downloaded from the history below; the first download creates the tag in pet-id.' d='Modules.Tagdesigner.Admin'}
+            {if $editing_tags}<br>{l s='QR code:' d='Modules.Tagdesigner.Admin'} <a href="{$editing_tags[0].url|escape:'html':'UTF-8'}" target="_blank" rel="noopener">{$editing_tags[0].url|escape:'html':'UTF-8'}</a> ({l s='changing the name here does not change it in pet-id' d='Modules.Tagdesigner.Admin'}){/if}
+            {if !$petid_configured}<br><strong>{l s='The pet-id admin key (PETID_ADMIN_KEY) is not set on the server: the QR code cannot be made yet.' d='Modules.Tagdesigner.Admin'}</strong>{/if}
+          </div>
+
+          <fieldset class="tag-designer__group js-tag-address-only" {if $values.type == 'qr'}hidden{/if}>
             <legend class="tag-designer__legend">{l s='Back' d='Modules.Tagdesigner.Admin'}</legend>
             <div class="tag-designer__field">
               <label for="tag-engraving-line1">{l s='Address line 1' d='Modules.Tagdesigner.Admin'}</label>
@@ -117,7 +137,7 @@
                 <i class="icon-save"></i> {if $edit_id}{l s='Save changes' d='Modules.Tagdesigner.Admin'}{else}{l s='Save to history' d='Modules.Tagdesigner.Admin'}{/if}
               </button>
               <button type="button" class="btn btn-default js-tag-tool-download" data-side="front"><i class="icon-download"></i> {l s='Front SVG' d='Modules.Tagdesigner.Admin'}</button>
-              <button type="button" class="btn btn-default js-tag-tool-download" data-side="back"><i class="icon-download"></i> {l s='Back SVG' d='Modules.Tagdesigner.Admin'}</button>
+              <button type="button" class="btn btn-default js-tag-tool-download js-tag-address-only" data-side="back" {if $values.type == 'qr'}hidden{/if}><i class="icon-download"></i> {l s='Back SVG' d='Modules.Tagdesigner.Admin'}</button>
             </div>
             <p class="help-block">{l s='Files are at real size in mm, with the text as outlines. The red "guide" group is the tag outline and the hole, for positioning.' d='Modules.Tagdesigner.Admin'}</p>
           </div>
@@ -127,7 +147,7 @@
   </form>
 
   <div class="panel js-tag-engraving">
-    <script type="application/json" class="js-tag-engraving-data">{['settings' => $history.settings, 'designs' => $history.designs, 'reference' => '']|json_encode nofilter}</script>
+    <script type="application/json" class="js-tag-engraving-data">{['settings' => $history.settings, 'designs' => $history.designs, 'reference' => '', 'petIdUrl' => $history.petIdUrl]|json_encode nofilter}</script>
     <div class="panel-heading">
       <i class="icon-time"></i> {l s='History' d='Modules.Tagdesigner.Admin'}
       <span class="badge">{$history.total|intval}</span>
@@ -166,7 +186,14 @@
                   {if $design.colour}{$design.colour.name|escape:'html':'UTF-8'}{else}<span class="text-danger">{l s='colour unknown' d='Modules.Tagdesigner.Admin'}</span>{/if}
                 </td>
                 <td>{$design.values.name|escape:'html':'UTF-8'}<br><span class="text-muted">{$design.values.font|escape:'html':'UTF-8'}, {$design.values.icon|escape:'html':'UTF-8'}</span></td>
-                <td>{$design.values.line1|escape:'html':'UTF-8'}<br>{$design.values.line2|escape:'html':'UTF-8'}<br>{$design.values.phone|escape:'html':'UTF-8'}</td>
+                <td>
+                  {if $design.type == 'qr'}
+                    <span class="text-muted">{l s='QR tag (pet-id)' d='Modules.Tagdesigner.Admin'}</span>
+                    <div class="tag-qr-units js-tag-qr-units"></div>
+                  {else}
+                    {$design.values.line1|escape:'html':'UTF-8'}<br>{$design.values.line2|escape:'html':'UTF-8'}<br>{$design.values.phone|escape:'html':'UTF-8'}
+                  {/if}
+                </td>
                 <td>
                   <div class="tag-engraving__thumbs">
                     <div class="tag-engraving__thumb js-tag-engraving-front"></div>
@@ -175,9 +202,9 @@
                 </td>
                 <td class="text-right text-nowrap">
                   <button type="button" class="btn btn-default btn-sm js-tag-engraving-download" data-side="front" disabled>{l s='Front SVG' d='Modules.Tagdesigner.Admin'}</button>
-                  <button type="button" class="btn btn-default btn-sm js-tag-engraving-download" data-side="back" disabled>{l s='Back SVG' d='Modules.Tagdesigner.Admin'}</button>
+                  {if $design.type != 'qr'}<button type="button" class="btn btn-default btn-sm js-tag-engraving-download" data-side="back" disabled>{l s='Back SVG' d='Modules.Tagdesigner.Admin'}</button>{/if}
                   <a class="btn btn-default btn-sm" href="{$action|escape:'html':'UTF-8'}&amp;edit={$design.id|intval}" title="{l s='Edit' d='Modules.Tagdesigner.Admin'}"><i class="icon-pencil"></i></a>
-                  <form method="post" action="{$action|escape:'html':'UTF-8'}" class="tag-engraving__delete" onsubmit="return confirm('{l s='Delete this engraving from the history?' d='Modules.Tagdesigner.Admin' js=1}');">
+                  <form method="post" action="{$action|escape:'html':'UTF-8'}" class="tag-engraving__delete" onsubmit="return confirm('{if $design.type == 'qr'}{l s='Delete this engraving from the history? Its QR code and access key are removed from the shop; the tag stays in pet-id.' d='Modules.Tagdesigner.Admin' js=1}{else}{l s='Delete this engraving from the history?' d='Modules.Tagdesigner.Admin' js=1}{/if}');">
                     <input type="hidden" name="id_engraving" value="{$design.id|intval}">
                     <button type="submit" name="deleteTagEngraving" value="1" class="btn btn-default btn-sm" title="{l s='Delete' d='Modules.Tagdesigner.Admin'}"><i class="icon-trash"></i></button>
                   </form>

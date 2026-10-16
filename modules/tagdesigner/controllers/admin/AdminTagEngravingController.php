@@ -2,12 +2,18 @@
 /**
  * Orders > Tag engraving: tags sold elsewhere (eBay, Etsy, Amazon) are designed with the shop's designer, kept in a
  * history and downloaded as engraving files, without an order in the shop.
+ *
+ * Its ajax action petId also creates the pet-id tag of a QR tag, for this page and for the order page.
  */
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
 use PrestaShop\Module\TagDesigner\Engravings;
+use PrestaShop\Module\TagDesigner\OrderDesigns;
+use PrestaShop\Module\TagDesigner\PetIdClient;
+use PrestaShop\Module\TagDesigner\PetIds;
+use PrestaShop\Module\TagDesigner\Settings;
 
 class AdminTagEngravingController extends ModuleAdminController
 {
@@ -39,7 +45,9 @@ class AdminTagEngravingController extends ModuleAdminController
         $this->addCSS([$uri . 'views/css/tag-designer.css', $uri . 'views/css/tag-engraving.css']);
         $this->addJS([
             $uri . TagDesigner::OPENTYPE,
+            $uri . TagDesigner::QRCODE,
             $uri . 'views/js/tag-renderer.js',
+            $uri . 'views/js/tag-qr.js',
             $uri . 'views/js/tag-designer-core.js',
             $uri . 'views/js/tag-engraving.js',
             $uri . 'views/js/tag-engraving-tool.js',
@@ -48,12 +56,23 @@ class AdminTagEngravingController extends ModuleAdminController
 
     public function postProcess()
     {
+        if ($this->ajax) {
+            if (Tools::getValue('action') === 'petId') {
+                header('Content-Type: application/json');
+                $this->ajaxRender(json_encode($this->petIdResponse()));
+                exit;
+            }
+
+            return;
+        }
+
         if (Tools::isSubmit('submitTagEngraving')) {
             $this->saveDesign();
         } elseif (Tools::isSubmit('deleteTagEngraving')) {
             if (!$this->access('delete')) {
                 $this->errors[] = $this->trans('You do not have permission to delete this.', [], 'Admin.Notifications.Error');
             } elseif ($this->engravings->delete((int) Tools::getValue('id_engraving'))) {
+                (new PetIds())->deleteFor(PetIds::ENGRAVING, (int) Tools::getValue('id_engraving'));
                 $this->redirect_after = $this->pageLink(['conf' => 1]);
             } else {
                 $this->errors[] = $this->trans('An error occurred during deletion.', [], 'Admin.Notifications.Error');
@@ -105,11 +124,57 @@ class AdminTagEngravingController extends ModuleAdminController
         $this->redirect_after = $this->pageLink(['conf' => $id ? 4 : 3, 'saved' => $savedId]);
     }
 
+    /**
+     * Creates (once) the pet-id tag of one QR tag: source "order" with an order line id and the tag's number in
+     * the line, or "engraving" with a saved design of this page. The values sent to pet-id are read here, not
+     * taken from the browser.
+     */
+    private function petIdResponse(): array
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return ['ok' => false, 'error' => 'POST only.'];
+        }
+        if (!$this->access('edit')) {
+            return ['ok' => false, 'error' => $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error')];
+        }
+
+        $source = Tools::getValue('source') === PetIds::ENGRAVING ? PetIds::ENGRAVING : PetIds::ORDER;
+        $id = (int) Tools::getValue('id');
+        $unit = (int) Tools::getValue('unit');
+        $values = null;
+        if ($source === PetIds::ORDER) {
+            $design = (new OrderDesigns($this->module->getSettings()))->forLine($id);
+            if ($design && $design['type'] === Settings::TYPE_QR && $unit >= 0 && $unit < $design['quantity']) {
+                $values = $design['values'];
+            }
+        } else {
+            $row = $this->engravings->find($id);
+            if ($row && $row['type'] === Settings::TYPE_QR && $unit === 0) {
+                $values = ['name' => $row['name'], 'font' => $row['font'], 'icon' => $row['icon']];
+            }
+        }
+        if ($values === null) {
+            return ['ok' => false, 'error' => 'There is no such QR tag.'];
+        }
+
+        try {
+            $tag = (new PetIds())->ensure($source, $id, $unit, $values, new PetIdClient());
+        } catch (RuntimeException $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+
+        return ['ok' => true, 'tag' => $tag];
+    }
+
     private function readForm(): array
     {
-        $values = [];
+        $values = ['type' => Tools::getValue('type') === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS];
         foreach (self::TEXTS as $key) {
             $values[$key] = trim(str_replace(["\r", "\n"], ' ', (string) Tools::getValue($key)));
+        }
+        // A QR tag has no address: its back is the QR code
+        if ($values['type'] === Settings::TYPE_QR) {
+            $values['line1'] = $values['line2'] = $values['phone'] = '';
         }
         $values['size'] = (int) Tools::getValue('size');
         $values['colour'] = (int) Tools::getValue('colour');
@@ -199,6 +264,7 @@ class AdminTagEngravingController extends ModuleAdminController
             $values = $this->posted;
         } elseif ($editing) {
             $values = [
+                'type' => $editing['type'],
                 'reference' => $editing['reference'],
                 'size' => (int) $editing['id_size'],
                 'colour' => (int) $editing['id_colour'],
@@ -211,6 +277,7 @@ class AdminTagEngravingController extends ModuleAdminController
             ];
         } else {
             $values = array_fill_keys(self::TEXTS, '') + [
+                'type' => Tools::getValue('type') === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS,
                 'size' => (int) array_key_first($sizes),
                 'colour' => (int) array_key_first($colours),
                 'font' => '',
@@ -222,6 +289,14 @@ class AdminTagEngravingController extends ModuleAdminController
         $page = max(1, (int) Tools::getValue('page'));
         $history = $this->engravings->page($search, $page, self::PER_PAGE);
         $designs = array_map(fn ($row) => $this->engravings->design($row, $renderer), $history['rows']);
+        $qrIds = array_column(array_filter($designs, static fn ($d) => $d['type'] === Settings::TYPE_QR), 'id');
+        $tags = (new PetIds())->forSources(PetIds::ENGRAVING, $qrIds);
+        foreach ($designs as &$design) {
+            $design['quantity'] = 1;
+            $design['tags'] = array_values($tags[$design['id']] ?? []);
+        }
+        unset($design);
+        $editingTags = $editing ? array_values($tags[$editId] ?? (new PetIds())->forSources(PetIds::ENGRAVING, [$editId])[$editId] ?? []) : [];
 
         // The search is a GET form: the page's link parameters (controller, token) go in hidden fields
         $link = $this->pageLink();
@@ -238,7 +313,11 @@ class AdminTagEngravingController extends ModuleAdminController
             'limits' => $limits,
             'sizes' => $sizes,
             'colours' => $colours,
+            'editing_tags' => $editingTags,
+            'petid_configured' => (new PetIdClient())->isConfigured(),
             'config' => array_merge($renderer, [
+                'type' => $values['type'],
+                'qrTag' => $editingTags ? ['id' => $editingTags[0]['id'], 'url' => $editingTags[0]['url']] : null,
                 'values' => $values,
                 'max' => $limits,
                 'texts' => [
@@ -255,6 +334,7 @@ class AdminTagEngravingController extends ModuleAdminController
             'history' => [
                 'settings' => $renderer,
                 'designs' => $designs,
+                'petIdUrl' => $this->module->petIdUrl(),
                 'total' => $history['total'],
                 'page' => $page,
                 'pages' => max(1, (int) ceil($history['total'] / self::PER_PAGE)),

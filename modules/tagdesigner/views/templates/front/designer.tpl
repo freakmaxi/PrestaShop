@@ -24,7 +24,7 @@
       </figure>
       <figure class="tag-designer__side">
         <div class="tag-designer__tag js-tag-back" role="img" aria-label="{l s='Back of the tag' d='Modules.Tagdesigner.Shop'}"></div>
-        <figcaption>{l s='Back' d='Modules.Tagdesigner.Shop'}</figcaption>
+        <figcaption>{if $tag_designer.type == 'qr'}{l s='Back: your pet\'s own QR code' d='Modules.Tagdesigner.Shop'}{else}{l s='Back' d='Modules.Tagdesigner.Shop'}{/if}</figcaption>
       </figure>
     </div>
     <p class="tag-designer__size js-tag-size"></p>
@@ -50,6 +50,9 @@
     </div>
   </fieldset>
 
+  {if $tag_designer.type == 'qr'}
+  <p class="tag-designer__note">{l s='The back is engraved with your pet\'s own QR code. You receive it with a metal access card: scan the tag, then the card, and add your contact details and a photo of your pet online, as often as you like.' d='Modules.Tagdesigner.Shop'}</p>
+  {else}
   <fieldset class="tag-designer__group">
     <legend class="tag-designer__legend">{l s='Back' d='Modules.Tagdesigner.Shop'}</legend>
 
@@ -69,6 +72,7 @@
       <small class="form-text js-tag-count" data-role="phone"></small>
     </div>
   </fieldset>
+  {/if}
 
   <div class="tag-designer__status alert alert-danger js-tag-status" role="alert" hidden></div>
 </section>

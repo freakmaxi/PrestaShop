@@ -54,6 +54,14 @@
         <source>Please choose a font.</source>
         <target state="final">Bitte wählen Sie eine Schrift.</target>
       </trans-unit>
+      <trans-unit id="036d778412408542f8a318a27f5dceb7" approved="yes">
+        <source>Back: your pet's own QR code</source>
+        <target state="final">Rückseite: der eigene QR-Code Ihres Tieres</target>
+      </trans-unit>
+      <trans-unit id="318bd09f4d7c12636d8b408550a78a6d" approved="yes">
+        <source>The back is engraved with your pet's own QR code. You receive it with a metal access card: scan the tag, then the card, and add your contact details and a photo of your pet online, as often as you like.</source>
+        <target state="final">Auf die Rückseite wird der eigene QR-Code Ihres Tieres graviert. Dazu erhalten Sie eine Zugangskarte aus Metall: Scannen Sie die Marke, dann die Karte, und hinterlegen Sie online Ihre Kontaktdaten und ein Foto Ihres Tieres, so oft Sie möchten.</target>
+      </trans-unit>
     </body>
   </file>
   <file original="views/templates/front/designer.tpl" source-language="en" target-language="de" datatype="plaintext">
@@ -101,6 +109,14 @@
       <trans-unit id="1f8261d17452a959e013666c5df45e07" approved="yes">
         <source>Phone number</source>
         <target state="final">Telefonnummer</target>
+      </trans-unit>
+      <trans-unit id="036d778412408542f8a318a27f5dceb7" approved="yes">
+        <source>Back: your pet's own QR code</source>
+        <target state="final">Rückseite: der eigene QR-Code Ihres Tieres</target>
+      </trans-unit>
+      <trans-unit id="318bd09f4d7c12636d8b408550a78a6d" approved="yes">
+        <source>The back is engraved with your pet's own QR code. You receive it with a metal access card: scan the tag, then the card, and add your contact details and a photo of your pet online, as often as you like.</source>
+        <target state="final">Auf die Rückseite wird der eigene QR-Code Ihres Tieres graviert. Dazu erhalten Sie eine Zugangskarte aus Metall: Scannen Sie die Marke, dann die Karte, und hinterlegen Sie online Ihre Kontaktdaten und ein Foto Ihres Tieres, so oft Sie möchten.</target>
       </trans-unit>
     </body>
   </file>

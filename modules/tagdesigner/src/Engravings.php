@@ -25,6 +25,7 @@ class Engravings
             'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE . '` (
                 `id_tagdesigner_engraving` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                 `reference` VARCHAR(64) NOT NULL,
+                `type` VARCHAR(8) NOT NULL DEFAULT \'address\',
                 `id_size` INT(10) UNSIGNED NOT NULL,
                 `id_colour` INT(10) UNSIGNED NOT NULL,
                 `name` VARCHAR(64) NOT NULL,
@@ -39,6 +40,22 @@ class Engravings
                 PRIMARY KEY (`id_tagdesigner_engraving`),
                 KEY `date_add` (`date_add`)
             ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4'
+        );
+    }
+
+    /**
+     * The tag type column (1.2.0): address tag or QR tag.
+     */
+    public function addType(): bool
+    {
+        $db = Db::getInstance();
+        $exists = (int) $db->getValue(
+            'SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = \'' . pSQL(_DB_PREFIX_ . self::TABLE) . '\' AND COLUMN_NAME = \'type\''
+        );
+
+        return $exists || $db->execute(
+            'ALTER TABLE `' . _DB_PREFIX_ . self::TABLE . '` ADD `type` VARCHAR(8) NOT NULL DEFAULT \'address\' AFTER `reference`'
         );
     }
 
@@ -88,6 +105,7 @@ class Engravings
         $now = date('Y-m-d H:i:s');
         $data = [
             'reference' => pSQL($values['reference'], true),
+            'type' => $values['type'] === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS,
             'id_size' => (int) $values['size'],
             'id_colour' => (int) $values['colour'],
             'name' => pSQL($values['name'], true),
@@ -126,6 +144,7 @@ class Engravings
         return [
             'id' => (int) $row['id_tagdesigner_engraving'],
             'file' => (string) $row['reference'],
+            'type' => (string) $row['type'],
             'date' => (string) $row['date_add'],
             'diameter' => $sizes[(int) $row['id_size']] ?? null,
             'colour' => $colours[(int) $row['id_colour']] ?? null,
