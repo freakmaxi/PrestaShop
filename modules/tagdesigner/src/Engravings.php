@@ -26,6 +26,7 @@ class Engravings
                 `id_tagdesigner_engraving` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
                 `reference` VARCHAR(64) NOT NULL,
                 `type` VARCHAR(8) NOT NULL DEFAULT \'address\',
+                `lang` VARCHAR(5) NOT NULL DEFAULT \'en\',
                 `id_size` INT(10) UNSIGNED NOT NULL,
                 `id_colour` INT(10) UNSIGNED NOT NULL,
                 `name` VARCHAR(64) NOT NULL,
@@ -44,19 +45,26 @@ class Engravings
     }
 
     /**
-     * The tag type column (1.2.0): address tag or QR tag.
+     * The columns of 1.2.0 on a table made by 1.1.0: the tag type (address or QR tag) and the access card's language.
      */
-    public function addType(): bool
+    public function addColumns(): bool
     {
+        $columns = [
+            'type' => 'VARCHAR(8) NOT NULL DEFAULT \'address\' AFTER `reference`',
+            'lang' => 'VARCHAR(5) NOT NULL DEFAULT \'en\' AFTER `type`',
+        ];
         $db = Db::getInstance();
-        $exists = (int) $db->getValue(
-            'SELECT COUNT(*) FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = \'' . pSQL(_DB_PREFIX_ . self::TABLE) . '\' AND COLUMN_NAME = \'type\''
-        );
+        foreach ($columns as $name => $definition) {
+            $exists = (int) $db->getValue(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = \'' . pSQL(_DB_PREFIX_ . self::TABLE) . '\' AND COLUMN_NAME = \'' . $name . '\''
+            );
+            if (!$exists && !$db->execute('ALTER TABLE `' . _DB_PREFIX_ . self::TABLE . '` ADD `' . $name . '` ' . $definition)) {
+                return false;
+            }
+        }
 
-        return $exists || $db->execute(
-            'ALTER TABLE `' . _DB_PREFIX_ . self::TABLE . '` ADD `type` VARCHAR(8) NOT NULL DEFAULT \'address\' AFTER `reference`'
-        );
+        return true;
     }
 
     public function dropTable(): bool
@@ -106,6 +114,7 @@ class Engravings
         $data = [
             'reference' => pSQL($values['reference'], true),
             'type' => $values['type'] === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS,
+            'lang' => Settings::cardLanguage((string) $values['lang']),
             'id_size' => (int) $values['size'],
             'id_colour' => (int) $values['colour'],
             'name' => pSQL($values['name'], true),
@@ -145,6 +154,7 @@ class Engravings
             'id' => (int) $row['id_tagdesigner_engraving'],
             'file' => (string) $row['reference'],
             'type' => (string) $row['type'],
+            'lang' => Settings::cardLanguage((string) $row['lang']),
             'date' => (string) $row['date_add'],
             'diameter' => $sizes[(int) $row['id_size']] ?? null,
             'colour' => $colours[(int) $row['id_colour']] ?? null,

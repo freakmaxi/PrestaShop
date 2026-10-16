@@ -48,6 +48,7 @@ class AdminTagEngravingController extends ModuleAdminController
             $uri . TagDesigner::QRCODE,
             $uri . 'views/js/tag-renderer.js',
             $uri . 'views/js/tag-qr.js',
+            $uri . 'views/js/tag-card.js',
             $uri . 'views/js/tag-designer-core.js',
             $uri . 'views/js/tag-engraving.js',
             $uri . 'views/js/tag-engraving-tool.js',
@@ -168,7 +169,10 @@ class AdminTagEngravingController extends ModuleAdminController
 
     private function readForm(): array
     {
-        $values = ['type' => Tools::getValue('type') === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS];
+        $values = [
+            'type' => Tools::getValue('type') === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS,
+            'lang' => Settings::cardLanguage((string) Tools::getValue('lang')),
+        ];
         foreach (self::TEXTS as $key) {
             $values[$key] = trim(str_replace(["\r", "\n"], ' ', (string) Tools::getValue($key)));
         }
@@ -265,6 +269,7 @@ class AdminTagEngravingController extends ModuleAdminController
         } elseif ($editing) {
             $values = [
                 'type' => $editing['type'],
+                'lang' => Settings::cardLanguage((string) $editing['lang']),
                 'reference' => $editing['reference'],
                 'size' => (int) $editing['id_size'],
                 'colour' => (int) $editing['id_colour'],
@@ -278,6 +283,7 @@ class AdminTagEngravingController extends ModuleAdminController
         } else {
             $values = array_fill_keys(self::TEXTS, '') + [
                 'type' => Tools::getValue('type') === Settings::TYPE_QR ? Settings::TYPE_QR : Settings::TYPE_ADDRESS,
+                'lang' => Settings::cardLanguage((string) Language::getIsoById((int) Configuration::get('PS_LANG_DEFAULT'))),
                 'size' => (int) array_key_first($sizes),
                 'colour' => (int) array_key_first($colours),
                 'font' => '',
@@ -314,6 +320,7 @@ class AdminTagEngravingController extends ModuleAdminController
             'sizes' => $sizes,
             'colours' => $colours,
             'editing_tags' => $editingTags,
+            'card_languages' => Settings::CARD_LANGUAGES,
             'petid_configured' => (new PetIdClient())->isConfigured(),
             'config' => array_merge($renderer, [
                 'type' => $values['type'],

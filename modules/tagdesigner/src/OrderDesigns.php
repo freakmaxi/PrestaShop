@@ -7,6 +7,7 @@
 namespace PrestaShop\Module\TagDesigner;
 
 use Db;
+use Language;
 use Product;
 
 if (!defined('_PS_VERSION_')) {
@@ -37,6 +38,11 @@ class OrderDesigns
             WHERE `id_order` = ' . $orderId . ' AND `id_customization` > 0
             ORDER BY `id_order_detail`'
         ) ?: [];
+
+        // The access card of a QR tag speaks the order's language
+        $lang = Settings::cardLanguage((string) Language::getIsoById((int) $db->getValue(
+            'SELECT `id_lang` FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_order` = ' . $orderId
+        )));
 
         $renderer = $this->settings->rendererSettings();
         $sizes = (array) $renderer['sizes'];
@@ -71,6 +77,7 @@ class OrderDesigns
             $designs[] = [
                 'line' => (int) $line['id_order_detail'],
                 'type' => $this->settings->type((int) $line['product_id']),
+                'lang' => $lang,
                 'name' => (string) $line['product_name'],
                 'quantity' => (int) $line['product_quantity'],
                 'diameter' => $diameter,

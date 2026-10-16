@@ -5,7 +5,7 @@
  * - back of the QR tag: the code made round like tools/circle-qr.js, the space around it filled with dots that
  *   look like more code. The filling comes from the tag id, so every download of a tag gives the same file.
  *   Light tags engrave the code, dark ones everything around it (negative), so the code stays dark and readable.
- * - access card: the plain square code of the access key on a business card.
+ * - access card (tag-card.js): the plain square code of the access key.
  *
  * Sides use the shapes of tag-renderer.js (millimetres, centre at 0, 0); the code is one even-odd path.
  */
@@ -27,8 +27,6 @@
 
   const LAYOUT = {
     tagMargin: 0, // mm between the tag edge and the round code: none, the code covers the whole back
-    card: { width: 85.6, height: 54, radius: 3.18 }, // mm, ISO/IEC 7810 ID-1
-    cardCode: 40, // mm, the square code with its quiet zone
   };
 
   // Shown on the product page and before a tag has its code: an unknown hol.red code redirects to the shop
@@ -327,55 +325,6 @@
     };
   }
 
-  /**
-   * Access card: the square code of the access key in the middle of the card. Returns { width, height, radius,
-   * shapes } in mm, centre at (0, 0).
-   */
-  function layoutCard(spec) {
-    const code = squareCode(spec.text, spec.logo);
-    const side = code.size + 2 * STYLE.quiet;
-    const scale = LAYOUT.cardCode / side;
-    const map = (x, y) => [(x - code.size / 2) * scale, (y - code.size / 2) * scale];
-    return {
-      width: LAYOUT.card.width,
-      height: LAYOUT.card.height,
-      radius: LAYOUT.card.radius,
-      shapes: [{ kind: 'engrave', evenodd: true, commands: mapContours(code.contours, map) }],
-    };
-  }
-
-  function esc(text) {
-    return String(text).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-  }
-
-  function cardRect(card) {
-    return `x="${-card.width / 2}" y="${-card.height / 2}" width="${card.width}" height="${card.height}" rx="${card.radius}"`;
-  }
-
-  function cardPreviewSvg(card) {
-    const pad = 0.6;
-    const paths = card.shapes.map((shape) => `<path d="${R.toPathData(shape.commands)}" fill="#1d1d1f" fill-rule="evenodd"/>`).join('');
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-card.width / 2 - pad} ${-card.height / 2 - pad} ${card.width + 2 * pad} ${card.height + 2 * pad}" role="img">`
-      + `<rect ${cardRect(card)} fill="#c9ccd1" stroke="#000" stroke-opacity="0.2" stroke-width="0.2"/>`
-      + paths
-      + '</svg>';
-  }
-
-  // Engraving file of the card: real size in mm; the card outline is in the "guide" group, like the tags
-  function cardEngravingSvg(card, title) {
-    const paths = card.shapes.map((shape) => `<path d="${R.toPathData(shape.commands, true)}" fill="#000000" fill-rule="evenodd"/>`).join('\n    ');
-    return '<?xml version="1.0" encoding="UTF-8"?>\n'
-      + `<svg xmlns="http://www.w3.org/2000/svg" width="${card.width}mm" height="${card.height}mm" viewBox="${-card.width / 2} ${-card.height / 2} ${card.width} ${card.height}">\n`
-      + `  <title>${esc(title || '')}</title>\n`
-      + '  <g id="guide" fill="none" stroke="#ff0000" stroke-width="0.02">\n'
-      + `    <rect ${cardRect(card)}/>\n`
-      + '  </g>\n'
-      + '  <g id="engraving">\n'
-      + `    ${paths}\n`
-      + '  </g>\n'
-      + '</svg>\n';
-  }
-
   function loadLogo(assets) {
     return R.loadIcon(`${assets}views/img/qr-logo.svg`);
   }
@@ -388,8 +337,7 @@
     squareCode,
     roundCode,
     layoutBack,
-    layoutCard,
-    cardPreviewSvg,
-    cardEngravingSvg,
+    roundedRect,
+    circle,
   };
 }(window));

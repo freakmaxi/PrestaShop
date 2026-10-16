@@ -47,7 +47,7 @@ class PetIdClient
     }
 
     /**
-     * Creates a tag in pet-id (valid one year, the service's default).
+     * Creates a tag in pet-id, as Basic: no validUntil, so it has no Premium features (the tag never expires).
      *
      * @return array{id: string, accessKey: string}
      *

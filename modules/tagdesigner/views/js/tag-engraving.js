@@ -3,7 +3,7 @@
  * with the same layout as the product page preview.
  *
  * A QR tag has one pet-id tag per tag ordered: its first download creates it on the server (data.petIdUrl), then
- * its back (the round QR code) and its access card are made from it.
+ * its back (the round QR code) and its access card (tag-card.js, both sides) are made from it.
  */
 (function () {
   'use strict';
@@ -68,7 +68,8 @@
         : '<span class="text-muted">not created yet</span>';
       return `<div class="tag-qr-unit" data-unit="${unit}"><span class="tag-qr-unit__label">${label(unit)}:</span> ${link} `
         + `<button type="button" class="btn btn-default btn-outline-secondary btn-sm js-tag-qr-download" data-kind="back">QR back SVG</button> `
-        + `<button type="button" class="btn btn-default btn-outline-secondary btn-sm js-tag-qr-download" data-kind="card">Access card SVG</button></div>`;
+        + `<button type="button" class="btn btn-default btn-outline-secondary btn-sm js-tag-qr-download" data-kind="card-front">Card front SVG</button> `
+        + `<button type="button" class="btn btn-default btn-outline-secondary btn-sm js-tag-qr-download" data-kind="card-back">Card back SVG</button></div>`;
     };
     const draw = () => {
       box.innerHTML = Array.from({ length: count }, (_, unit) => line(unit)).join('');
@@ -89,9 +90,20 @@
         const first = !known[unit];
         known[unit] = tag;
         const what = `${design.file || `${data.reference} #${index + 1}`}${count > 1 ? ` tag ${unit + 1}` : ''}`;
-        if (kind === 'card') {
-          const card = window.TagQr.layoutCard({ text: tag.accessKey, logo: ctx.logo });
-          download(name(unit, 'card'), window.TagQr.cardEngravingSvg(card, `${what} access card: ${design.values.name} (${tag.url})`));
+        if (kind === 'card-front' || kind === 'card-back') {
+          const spec = {
+            lang: design.lang,
+            name: design.values.name,
+            accessKey: tag.accessKey,
+            reference: design.file || data.reference,
+            font: ctx.font,
+            textFont: ctx.backFont,
+            icon: ctx.icon,
+            logo: ctx.logo,
+          };
+          const front = kind === 'card-front';
+          const card = front ? window.TagCard.layoutFront(spec) : window.TagCard.layoutBack(spec);
+          download(name(unit, kind), window.TagCard.engravingSvg(card, `${what} access card ${front ? 'front' : 'back'} (${design.lang}): ${design.values.name}`));
         } else {
           const side = window.TagQr.layoutBack({
             diameter: design.diameter, hole: ctx.settings.hole, text: tag.url, seed: tag.id, negative: ctx.white, logo: ctx.logo,
@@ -157,7 +169,9 @@
         row.querySelector('.js-tag-engraving-front').innerHTML = R.previewSvg(sides.front, look);
         row.querySelector('.js-tag-engraving-back').innerHTML = R.previewSvg(sides.back, look);
         if (qr) {
-          showQrTags(row, data, design, index, { settings, logo, look, white: Boolean(colour.white), error });
+          showQrTags(row, data, design, index, {
+            settings, logo, look, white: Boolean(colour.white), error, font, backFont, icon,
+          });
         }
 
         row.querySelectorAll('.js-tag-engraving-download').forEach((button) => {

@@ -90,6 +90,16 @@
             </div>
           </fieldset>
 
+          <div class="tag-designer__field js-tag-qr-only" {if $values.type != 'qr'}hidden{/if}>
+            <label for="tag-engraving-lang">{l s='Access card language' d='Modules.Tagdesigner.Admin'}</label>
+            <select class="form-control" id="tag-engraving-lang" name="lang" style="max-width:16rem">
+              {foreach $card_languages as $iso => $language}
+                <option value="{$iso|escape:'html':'UTF-8'}" {if $iso == $values.lang}selected{/if}>{$language|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p class="help-block">{l s='Shop orders use the language the customer ordered in.' d='Modules.Tagdesigner.Admin'}</p>
+          </div>
+
           <div class="alert alert-info js-tag-qr-only" {if $values.type != 'qr'}hidden{/if}>
             {l s='The back is the pet-id QR code. Save the design: its QR back and access card are downloaded from the history below; the first download creates the tag in pet-id.' d='Modules.Tagdesigner.Admin'}
             {if $editing_tags}<br>{l s='QR code:' d='Modules.Tagdesigner.Admin'} <a href="{$editing_tags[0].url|escape:'html':'UTF-8'}" target="_blank" rel="noopener">{$editing_tags[0].url|escape:'html':'UTF-8'}</a> ({l s='changing the name here does not change it in pet-id' d='Modules.Tagdesigner.Admin'}){/if}
@@ -188,7 +198,7 @@
                 <td>{$design.values.name|escape:'html':'UTF-8'}<br><span class="text-muted">{$design.values.font|escape:'html':'UTF-8'}, {$design.values.icon|escape:'html':'UTF-8'}</span></td>
                 <td>
                   {if $design.type == 'qr'}
-                    <span class="text-muted">{l s='QR tag (pet-id)' d='Modules.Tagdesigner.Admin'}</span>
+                    <span class="text-muted">{l s='QR tag (pet-id)' d='Modules.Tagdesigner.Admin'}, {l s='card' d='Modules.Tagdesigner.Admin'}: {$card_languages[$design.lang]|default:$design.lang|escape:'html':'UTF-8'}</span>
                     <div class="tag-qr-units js-tag-qr-units"></div>
                   {else}
                     {$design.values.line1|escape:'html':'UTF-8'}<br>{$design.values.line2|escape:'html':'UTF-8'}<br>{$design.values.phone|escape:'html':'UTF-8'}

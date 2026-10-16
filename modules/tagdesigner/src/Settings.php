@@ -36,6 +36,16 @@ class Settings
     public const TYPE_ADDRESS = 'address';
     public const TYPE_QR = 'qr';
 
+    // Languages of the access card (views/js/tag-card.js): an order's language when it is one of them, else the first
+    public const CARD_LANGUAGES = ['en' => 'English', 'de' => 'Deutsch'];
+
+    public static function cardLanguage(string $iso): string
+    {
+        $iso = strtolower($iso);
+
+        return isset(self::CARD_LANGUAGES[$iso]) ? $iso : (string) array_key_first(self::CARD_LANGUAGES);
+    }
+
     // Character limits of the texts when the product has none (customtextlimit sets them per field)
     private const LIMITS = ['name' => 12, 'line1' => 27, 'line2' => 25, 'phone' => 20];
 

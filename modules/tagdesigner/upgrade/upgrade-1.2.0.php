@@ -1,6 +1,6 @@
 <?php
 /**
- * 1.2.0: QR tags: the type column of the engraving history and the pet-id tags table.
+ * 1.2.0: QR tags: the tag type and card language of the engraving history, and the pet-id tags table.
  */
 if (!defined('_PS_VERSION_')) {
     exit;

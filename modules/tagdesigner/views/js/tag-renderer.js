@@ -486,6 +486,7 @@
     loadFont,
     loadIcon,
     missingChars,
+    fontSizeForCap,
     textCommands,
     points,
     bounds,

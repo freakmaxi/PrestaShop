@@ -50,7 +50,7 @@ The theme hook-up is in the child theme's `catalog/_partials/product-customizati
 ## QR tags (pet-id)
 
 The first download of a QR tag's back or card creates its tag in the pet-id service (`POST /admin/client` with
-the pet name, font as `styleCode` and icon as `iconCode`; valid one year) and its link in the hol.red
+the pet name, font as `styleCode` and icon as `iconCode`; Basic, without Premium) and its link in the hol.red
 shortener (`/c/shorten?r=https://apps.houseofleo.de/petid/ui/tags/<id>`), from the shop's server
 (`src/PetIdClient.php`). The tag id, access key and link are kept in `tagdesigner_petid` (`src/PetIds.php`), so
 every later download gives the same files. Deleting a design from the engraving history removes its codes from
@@ -64,8 +64,15 @@ the shop; the tag stays in pet-id. Changing the name of a design whose tag exist
   The filling is seeded with the tag id, so it is the same on every download. Light tags engrave the code; dark
   tags (engraved in white) engrave the whole circle except the code, so it stays dark and readable. One path,
   even-odd fill rule.
-- **Access card** (`layoutCard`): 85.6 × 54 mm, the plain access key as a square code (40 mm with its quiet
-  zone) in the middle. The card design is not final yet.
+- **Access card** (`views/js/tag-card.js`, two files: front and back): a black aluminium card, 85.6 × 54 mm.
+  Engraving shows the silver metal, so the texts, logo and symbols are engraved and the access key's square
+  code (36 mm with its quiet zone, logo in the middle) is engraved in negative: black modules on silver.
+  Front: logo, "HOUSE OF LEO", "Pet ID · Access card", the pet's icon and name in its font, the three steps
+  (scan the tag, tap the person icon, scan this card), "Keep this card safe". Back: whom to contact with the
+  order number when the tag or card is lost, and houseofleo.de. Never the tag's hol.red link: finding only the
+  card (or only the tag) is not enough to edit the pet's page. Texts in the back font, in English or German:
+  the order's language for shop orders, a choice on the engraving page. A replacement card is the same
+  download again (the key is kept).
 
 Setup: a product with the same size and colour groups and three text customization fields (pet name 12, icon 3,
 font 4), added in the settings with back side "QR code (pet-id)". The server needs the environment variables
@@ -113,8 +120,8 @@ turns the text into outlines in the browser.
 PrestaShop does not run a module's upgrade by itself. After deploying a new version (`$this->version` in
 `tagdesigner.php`), upgrade it once in Modules > Module Manager or with
 `php bin/console prestashop:module upgrade tagdesigner`. 1.1.0 adds the engraving page and its table
-(`upgrade/upgrade-1.1.0.php`); 1.2.0 the QR tags (`upgrade/upgrade-1.2.0.php`: the tag type of the history, the
-`tagdesigner_petid` table). Uninstalling the module deletes the history and the shop's copy of the pet-id codes.
+(`upgrade/upgrade-1.1.0.php`); 1.2.0 the QR tags (`upgrade/upgrade-1.2.0.php`: the tag type and card language of the
+history, the `tagdesigner_petid` table). Uninstalling the module deletes the history and the shop's copy of the pet-id codes.
 
 ## Translations
 

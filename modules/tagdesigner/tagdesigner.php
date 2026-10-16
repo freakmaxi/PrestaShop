@@ -85,7 +85,7 @@ class TagDesigner extends Module
      */
     public function installEngravingPage(): bool
     {
-        if (!(new Engravings())->createTable() || !(new Engravings())->addType() || !(new PetIds())->createTable()) {
+        if (!(new Engravings())->createTable() || !(new Engravings())->addColumns() || !(new PetIds())->createTable()) {
             return false;
         }
         if (Tab::getIdFromClassName(self::ADMIN_TAB)) {
@@ -189,7 +189,7 @@ class TagDesigner extends Module
             'designs' => $designs,
             'order_reference' => $order->reference,
             'assets' => $this->getPathUri(),
-            'scripts' => [self::OPENTYPE, self::QRCODE, 'views/js/tag-renderer.js', 'views/js/tag-qr.js', 'views/js/tag-engraving.js'],
+            'scripts' => [self::OPENTYPE, self::QRCODE, 'views/js/tag-renderer.js', 'views/js/tag-qr.js', 'views/js/tag-card.js', 'views/js/tag-engraving.js'],
             'settings' => $this->settings->rendererSettings(),
             'petid_url' => $this->petIdUrl(),
         ]);

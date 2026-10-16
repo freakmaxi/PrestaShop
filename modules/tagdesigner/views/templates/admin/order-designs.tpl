@@ -20,7 +20,7 @@
             <tr><th>{l s='Colour' d='Modules.Tagdesigner.Admin'}</th><td>{if $design.colour}{$design.colour.name|escape:'html':'UTF-8'}, {if $design.colour.white}{l s='white engraving' d='Modules.Tagdesigner.Admin'}{else}{l s='black engraving' d='Modules.Tagdesigner.Admin'}{/if}{else}<span class="text-danger">{l s='unknown' d='Modules.Tagdesigner.Admin'}</span>{/if}</td></tr>
             <tr><th>{l s='Name' d='Modules.Tagdesigner.Admin'}</th><td>{$design.values.name|escape:'html':'UTF-8'} <span class="text-muted">({$design.values.font|escape:'html':'UTF-8'}, {$design.values.icon|escape:'html':'UTF-8'})</span></td></tr>
             {if $design.type == 'qr'}
-              <tr><th>{l s='Back' d='Modules.Tagdesigner.Admin'}</th><td>{l s='QR code (pet-id), with an access card' d='Modules.Tagdesigner.Admin'}</td></tr>
+              <tr><th>{l s='Back' d='Modules.Tagdesigner.Admin'}</th><td>{l s='QR code (pet-id), with an access card' d='Modules.Tagdesigner.Admin'} ({$design.lang|upper|escape:'html':'UTF-8'})</td></tr>
             {else}
               <tr><th>{l s='Back' d='Modules.Tagdesigner.Admin'}</th><td>{$design.values.line1|escape:'html':'UTF-8'}<br>{$design.values.line2|escape:'html':'UTF-8'}<br>{$design.values.phone|escape:'html':'UTF-8'}</td></tr>
             {/if}
