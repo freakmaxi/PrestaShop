@@ -117,8 +117,9 @@ turns the text into outlines in the browser.
 
 ## Upgrades
 
-PrestaShop does not run a module's upgrade by itself. After deploying a new version (`$this->version` in
-`tagdesigner.php`), upgrade it once in Modules > Module Manager or with
+PrestaShop does not run a module's upgrade by itself; the store image does it on every start
+(`houseofleo/sync-customizations.sh`, which also installs the module when it is not installed yet). Elsewhere, after a new version
+(`$this->version` in `tagdesigner.php`), upgrade it in Modules > Module Manager or with
 `php bin/console prestashop:module upgrade tagdesigner`. 1.1.0 adds the engraving page and its table
 (`upgrade/upgrade-1.1.0.php`); 1.2.0 the QR tags (`upgrade/upgrade-1.2.0.php`: the tag type and card language of the
 history, the `tagdesigner_petid` table). Uninstalling the module deletes the history and the shop's copy of the pet-id codes.

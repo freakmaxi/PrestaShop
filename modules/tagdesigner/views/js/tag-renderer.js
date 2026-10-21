@@ -14,7 +14,8 @@
     holeEdge: 1, // mm, between the tag edge and the ring hole
     gap: 0.8, // mm, between the name and the icon, and between the address and the phone number
     nameCap: 0.24,
-    nameShare: 0.56, // part of the height below the hole used by the name, the rest is for the icon
+    nameShare: 0.56, // part of the height below the hole that sets the name's size, the rest sets the icon's
+    nameCentre: -0.03, // vertical centre of the name as a fraction of the diameter (0 is the middle of the tag)
     iconMax: 0.38, // largest icon height as a fraction of the diameter
     iconScale: 0.81, // the fitted icon is drawn at this size, centred on the same point
     lineCap: 0.068,
@@ -285,7 +286,7 @@
   }
 
   /**
-   * Front: the name in the upper part, the icon below it.
+   * Front: the name a little above the middle, the icon below it.
    *
    * spec: { diameter, hole, font, name, nameGhost, icon } where icon is the result of loadIcon() or null and
    * nameGhost is shown (and never exported) while the name is empty.
@@ -294,18 +295,24 @@
     const g = geometry(spec.diameter, spec.hole);
     const d = spec.diameter;
     const shapes = [];
+    // The sizes come from splitting the height below the hole between the name and the icon; the name is then
+    // drawn lower, around nameCentre, and the icon below it
     const split = g.top + (g.inner - g.top) * LAYOUT.nameShare;
+    let nameBottom = split;
 
     const text = spec.name.trim() || spec.nameGhost || '';
     if (text && spec.font) {
       const commands = textCommands(spec.font, text, fontSizeForCap(spec.font, LAYOUT.nameCap * d));
       const pts = points(commands);
       if (pts.length) {
-        const cy = (g.top + split) / 2;
-        const scale = fitScale(pts, 0, cy, 1, (x, y) => inCircle(x, y, g.inner) && y >= g.top && y <= split);
+        const box = bounds(pts);
+        const size = fitScale(pts, 0, (g.top + split) / 2, 1, (x, y) => inCircle(x, y, g.inner) && y >= g.top && y <= split);
+        const cy = LAYOUT.nameCentre * d;
+        const scale = fitScale(pts, 0, cy, size, (x, y) => inCircle(x, y, g.inner) && y >= g.top);
+        nameBottom = cy + ((box.y1 - box.y0) * scale) / 2;
         shapes.push({
           kind: spec.name.trim() ? 'engrave' : 'ghost',
-          commands: placeOnBox(commands, bounds(pts), 0, cy, scale),
+          commands: placeOnBox(commands, box, 0, cy, scale),
         });
       }
     }
@@ -328,11 +335,22 @@
             best = { scale, cy };
           }
         }
+        // At the size it is drawn, the icon goes in the middle of the heights where it fits below the name
+        const drawn = best.scale * LAYOUT.iconScale;
+        const below = (x, y) => inCircle(x, y, g.inner) && y >= nameBottom + LAYOUT.gap;
+        const fitting = [];
+        for (let i = 0; i <= 48; i += 1) {
+          const cy = top + ((g.inner - top) * i) / 48;
+          if (fitScale(all, 0, cy, drawn, below) >= drawn - 1e-6) {
+            fitting.push(cy);
+          }
+        }
+        const cy = fitting.length ? (fitting[0] + fitting[fitting.length - 1]) / 2 : best.cy;
         // Every path is placed on the bounds of the whole icon
         spec.icon.forEach((path) => {
           shapes.push({
             kind: path.bare ? 'bare' : 'engrave',
-            commands: placeOnBox(path.commands, box, 0, best.cy, best.scale * LAYOUT.iconScale),
+            commands: placeOnBox(path.commands, box, 0, cy, drawn),
           });
         });
       }

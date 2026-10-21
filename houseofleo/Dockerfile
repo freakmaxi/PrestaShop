@@ -1,6 +1,6 @@
 # House of Leo store image: official PrestaShop 9.2.0 + our modules and child theme.
-# Build from the repository root (nodes are amd64):
-#   docker build --platform linux/amd64 -f houseofleo/Dockerfile -t docker.hudolini.com/houseofleo/store:v<VERSION> .
+# Build (linux/amd64 for the nodes), from any directory:
+#   houseofleo/build.sh --push   (tags v<prestashop>-<next build number>; see houseofleo/README.md)
 # Deployed by infrastructure/65-houseofleo/hudolini-eu-01-production/store (Mega/Projects/HouseOfLeo).
 
 # The module's autoloader is generated here instead of being committed

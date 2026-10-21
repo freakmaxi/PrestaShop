@@ -14,9 +14,12 @@ Deployment manifests: `~/Mega/Projects/HouseOfLeo/infrastructure`.
 ## Image
 
 ```sh
-docker build --platform linux/amd64 -f houseofleo/Dockerfile -t docker.hudolini.com/houseofleo/store:v<VERSION> .
-docker push docker.hudolini.com/houseofleo/store:v<VERSION>
+houseofleo/build.sh --push    # docker.hudolini.com/houseofleo/store:v9.2.0-<next>; without --push it only builds
 ```
+
+The tag is the base image's PrestaShop version and the next build number in the registry (`v9.2.0-2` after
+`v9.2.0-1`), so nothing is typed by hand and the deploy script picks it up as the newest. Needs
+`docker login docker.hudolini.com` (the registry is read to find the number), `jq` and `curl`.
 
 Based on the official `prestashop/prestashop:9.2.0-apache` image, which installs PrestaShop on the first start
 of an empty volume. On top of it:
@@ -24,13 +27,13 @@ of an empty volume. On top of it:
 - `post-install.sh`: after that install, renames the admin folder to `SHOP_ADMIN_FOLDER`, installs the modules
   and enables the child theme.
 - `sync-customizations.sh`: run by the initContainer on every start; copies the modules and theme to the volume
-  when the image carries a newer version, and clears the cache and the combined theme JS/CSS (their file name
-  does not change with the content).
-
-A module new to an existing volume is copied but not installed: install it once in the back office
-(Modules > Module Manager) or with `php bin/console prestashop:module install <name>` in the store container.
-A new version of an installed module (its `$this->version`) is copied too, but its upgrade script only runs from
-Modules > Module Manager (Upgrade) or `php bin/console prestashop:module upgrade <name>`.
+  when the image carries a newer version, clears the cache and the combined theme JS/CSS (their file name
+  does not change with the content), and on every start upgrades our modules, or installs one that is not
+  installed yet. The files come with the image, but a module's database part (its tables, columns, hooks, menu
+  entries, version) only changes when it is installed or upgraded: this makes a new image enough, without a
+  click in Module Manager. A module of the image is always installed again, so remove a module from the image
+  to remove it. A failure is logged (`kc logs -n hol-store deploy/store -c sync-customizations`) and does not
+  stop the start.
 - `apache-env.conf`: passes `PS_TRUSTED_PROXIES` to PHP, without it Symfony ignores the ingress X-Forwarded-* headers.
 - `php.ini`: upload size (keep in line with the ingress `proxy-body-size`), memory, `max_input_vars`.
 
