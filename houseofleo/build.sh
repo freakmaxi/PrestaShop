@@ -64,7 +64,9 @@ readonly CREATED="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 PREVIOUS="none"
 [[ -n "$LAST" ]] && PREVIOUS="v${PS_VERSION}-${LAST}"
 echo "building $TAG ($PLATFORM; last in the registry: $PREVIOUS)"
+# --pull: the base image tag is rebuilt upstream for PHP security fixes; never build on a stale local copy
 docker build \
+  --pull \
   --platform "$PLATFORM" \
   --label "org.opencontainers.image.title=hol-store" \
   --label "org.opencontainers.image.description=House of Leo store: PrestaShop ${PS_VERSION} with our modules and theme" \
